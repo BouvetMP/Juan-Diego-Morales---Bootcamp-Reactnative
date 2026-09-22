@@ -5,24 +5,24 @@ import {
   FlatList,
   TextInput,
   StyleSheet,
-  SafeAreaView,
-  StatusBar,
   Platform,
-  KeyboardAvoidingView,
   ListRenderItem,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import { CableCarRoute } from '../types';
 import ItemCard from '../components/ItemCard';
 import { cableCarRoutes } from '../data/mockData';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../theme';
+import type { HomeStackParamList } from '../navigation/types';
+
+type HomeNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeList'>;
 
 export function HomeScreen(): React.JSX.Element {
-  const DOMAIN_TITLE = '🚡 Cable Bogotá';
-  const DOMAIN_SUBTITLE = 'Rutas de portal a portal';
-
+  const navigation = useNavigation<HomeNavigationProp>();
   const [query, setQuery] = useState<string>('');
 
-  // 🔍 Filtrado en tiempo real con useMemo
   const filteredRoutes = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
     if (!trimmed) return cableCarRoutes;
@@ -37,11 +37,23 @@ export function HomeScreen(): React.JSX.Element {
     );
   }, [query]);
 
-  const handleItemPress = useCallback((route: CableCarRoute) => {
-    console.log('Ruta seleccionada:', route.name);
-  }, []);
+  // Navegar al detalle pasando params tipados
+  const handleItemPress = useCallback(
+    (route: CableCarRoute) => {
+      navigation.navigate('HomeDetail', {
+        id: route.id,
+        name: route.name,
+        route: route.route,
+        originStation: route.originStation,
+        destinationStation: route.destinationStation,
+        duration: route.duration,
+        ticketPrice: route.ticketPrice,
+        subtitle: route.subtitle,
+      });
+    },
+    [navigation]
+  );
 
-  // Renderizado optimizado de los items de la lista
   const renderItem: ListRenderItem<CableCarRoute> = useCallback(
     ({ item }) => (
       <ItemCard route={item} onPress={() => handleItemPress(item)} />
@@ -49,7 +61,6 @@ export function HomeScreen(): React.JSX.Element {
     [handleItemPress]
   );
 
-  // Estado vacío cuando la búsqueda no da resultados
   const renderEmpty = useCallback(
     () => (
       <View style={styles.emptyContainer}>
@@ -64,72 +75,53 @@ export function HomeScreen(): React.JSX.Element {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
-
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        {/* Encabezado y buscador fijos en la parte superior para mantener el foco */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>{DOMAIN_TITLE}</Text>
-          <Text style={styles.headerSubtitle}>{DOMAIN_SUBTITLE}</Text>
-
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar ruta, portal o estación..."
-            placeholderTextColor={COLORS.textSecondary}
-            value={query}
-            onChangeText={setQuery}
-            returnKeyType="search"
-            autoCapitalize="none"
-            autoCorrect={false}
-            clearButtonMode="while-editing"
-          />
-        </View>
-
-        {/* Lista fluida con FlatList */}
-        <FlatList
-          data={filteredRoutes}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          ListEmptyComponent={renderEmpty}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          contentContainerStyle={styles.listContent}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          showsVerticalScrollIndicator={false}
+    <View style={styles.container}>
+      {/* Buscador fijo (no se desmonta al escribir) */}
+      <View style={styles.header}>
+        <Text style={styles.headerSubtitle}>Rutas de portal a portal</Text>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar ruta, portal o estación..."
+          placeholderTextColor={COLORS.textSecondary}
+          value={query}
+          onChangeText={setQuery}
+          returnKeyType="search"
+          autoCapitalize="none"
+          autoCorrect={false}
+          clearButtonMode="while-editing"
         />
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </View>
+
+      <FlatList
+        data={filteredRoutes}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        ListEmptyComponent={renderEmpty}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  container: {
-    flex: 1,
-  },
   header: {
     paddingHorizontal: SPACING.base,
-    paddingTop: SPACING.base,
+    paddingTop: SPACING.sm,
     paddingBottom: SPACING.md,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  headerTitle: {
-    fontSize: TYPOGRAPHY.size.xxl,
-    fontWeight: TYPOGRAPHY.weight.bold,
-    color: COLORS.textPrimary,
-  },
   headerSubtitle: {
     fontSize: TYPOGRAPHY.size.sm,
     color: COLORS.textSecondary,
-    marginTop: SPACING.xs,
     marginBottom: SPACING.md,
   },
   searchInput: {

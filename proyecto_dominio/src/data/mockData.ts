@@ -122,3 +122,11 @@ export const cableCarRoutes: CableCarRoute[] = [
     subtitle: 'Ruta de apoyo al Aeropuerto El Dorado',
   },
 ];
+
+// Favoritos estáticos (mínimo 3) — Semana 03
+export const FAVORITES: CableCarRoute[] = [
+  cableCarRoutes[0], // Portal 80 - Suba
+  cableCarRoutes[5], // TransMiCable Ciudad Bolívar
+  cableCarRoutes[7], // Monserrate
+  cableCarRoutes[3], // Tunal - 20 de Julio
+];
