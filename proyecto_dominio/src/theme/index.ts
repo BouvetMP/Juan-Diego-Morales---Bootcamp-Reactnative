@@ -1,23 +1,18 @@
 export const COLORS = {
-  // Fondos
   background: '#0d1117',
   surface: '#161b22',
   surfaceAlt: '#21262d',
 
-  // Bordes
   border: '#30363d',
   borderLight: '#21262d',
 
-  // Texto
   textPrimary: '#e6edf3',
   textSecondary: '#8b949e',
   textMuted: '#6e7681',
 
-  // Acento — dominio Cable Bogotá
   accent: '#61DAFB',
   accentDim: '#61DAFB33',
 
-  // Semánticos
   success: '#3fb950',
   warning: '#f0883e',
   error: '#f85149',

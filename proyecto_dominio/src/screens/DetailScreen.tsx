@@ -1,25 +1,42 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View, Image } from 'react-native';
+import React, { useMemo } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  Pressable,
+} from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
 import type { HomeStackParamList } from '../navigation/types';
+import { useSavedStore } from '../stores/savedStore';
+import type { CableCarRoute } from '../types';
 
 type DetailRouteProp = RouteProp<HomeStackParamList, 'HomeDetail'>;
 
 export function DetailScreen(): React.JSX.Element {
   const route = useRoute<DetailRouteProp>();
-  const {
-    id,
-    name,
-    route: line,
-    originStation,
-    destinationStation,
-    duration,
-    ticketPrice,
-    subtitle,
-  } = route.params;
+  const params = route.params;
+
+  const isSaved = useSavedStore((s) => s.isSaved(params.id));
+  const toggleRoute = useSavedStore((s) => s.toggleRoute);
+
+  const cableRoute: CableCarRoute = useMemo(
+    () => ({
+      id: params.id,
+      name: params.name,
+      route: params.route,
+      originStation: params.originStation,
+      destinationStation: params.destinationStation,
+      duration: params.duration,
+      ticketPrice: params.ticketPrice,
+      subtitle: params.subtitle,
+    }),
+    [params]
+  );
 
   return (
     <ScrollView
@@ -33,39 +50,52 @@ export function DetailScreen(): React.JSX.Element {
         resizeMode="cover"
       />
 
-      <Text style={styles.name}>{name}</Text>
+      <Text style={styles.name}>{params.name}</Text>
 
       <View style={styles.badge}>
-        <Text style={styles.badgeText}>{line}</Text>
+        <Text style={styles.badgeText}>{params.route}</Text>
       </View>
 
-      <Text style={styles.subtitle}>{subtitle}</Text>
+      <Text style={styles.subtitle}>{params.subtitle}</Text>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.saveButton,
+          isSaved && styles.saveButtonActive,
+          pressed && styles.saveButtonPressed,
+        ]}
+        onPress={() => toggleRoute(cableRoute)}
+      >
+        <Text style={[styles.saveButtonText, isSaved && styles.saveButtonTextActive]}>
+          {isSaved ? '♥ Quitar de favoritos' : '♡ Guardar en favoritos'}
+        </Text>
+      </Pressable>
 
       <View style={styles.field}>
         <Text style={styles.fieldLabel}>Origen</Text>
-        <Text style={styles.fieldValue}>{originStation}</Text>
+        <Text style={styles.fieldValue}>{params.originStation}</Text>
       </View>
 
       <View style={styles.field}>
         <Text style={styles.fieldLabel}>Destino</Text>
-        <Text style={styles.fieldValue}>{destinationStation}</Text>
+        <Text style={styles.fieldValue}>{params.destinationStation}</Text>
       </View>
 
       <View style={styles.field}>
         <Text style={styles.fieldLabel}>Duración del trayecto</Text>
-        <Text style={styles.fieldValue}>{duration} minutos</Text>
+        <Text style={styles.fieldValue}>{params.duration} minutos</Text>
       </View>
 
       <View style={styles.field}>
         <Text style={styles.fieldLabel}>Tarifa</Text>
         <Text style={[styles.fieldValue, styles.price]}>
-          ${ticketPrice.toLocaleString('es-CO')} COP
+          ${params.ticketPrice.toLocaleString('es-CO')} COP
         </Text>
       </View>
 
       <View style={styles.field}>
         <Text style={styles.fieldLabel}>ID de ruta</Text>
-        <Text style={styles.fieldValue}>{id}</Text>
+        <Text style={styles.fieldValue}>{params.id}</Text>
       </View>
     </ScrollView>
   );
@@ -108,7 +138,29 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: TYPOGRAPHY.size.sm,
     color: COLORS.textSecondary,
-    marginBottom: SPACING.sm,
+  },
+  saveButton: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.accent,
+    borderRadius: RADIUS.full,
+    paddingVertical: SPACING.md,
+    alignItems: 'center',
+  },
+  saveButtonActive: {
+    backgroundColor: COLORS.accentDim,
+    borderColor: COLORS.error,
+  },
+  saveButtonPressed: {
+    opacity: 0.75,
+  },
+  saveButtonText: {
+    fontSize: TYPOGRAPHY.size.base,
+    fontWeight: TYPOGRAPHY.weight.bold,
+    color: COLORS.accent,
+  },
+  saveButtonTextActive: {
+    color: COLORS.error,
   },
   field: {
     backgroundColor: COLORS.surface,

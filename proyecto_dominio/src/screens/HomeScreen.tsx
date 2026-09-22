@@ -76,7 +76,6 @@ export function HomeScreen(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      {/* Buscador fijo (no se desmonta al escribir) */}
       <View style={styles.header}>
         <Text style={styles.headerSubtitle}>Rutas de portal a portal</Text>
         <TextInput

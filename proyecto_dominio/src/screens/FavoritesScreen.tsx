@@ -1,13 +1,24 @@
 import React, { useCallback } from 'react';
-import { FlatList, StyleSheet, Text, View, ListRenderItem } from 'react-native';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+  Pressable,
+  ListRenderItem,
+} from 'react-native';
 
-import { FAVORITES } from '../data/mockData';
 import { CableCarRoute } from '../types';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
+import { useSavedStore } from '../stores/savedStore';
 
 export function FavoritesScreen(): React.JSX.Element {
-  const renderFavorite: ListRenderItem<CableCarRoute> = useCallback(({ item }) => {
-    return (
+  const savedRoutes = useSavedStore((s) => s.savedRoutes);
+  const removeRoute = useSavedStore((s) => s.removeRoute);
+  const clearAll = useSavedStore((s) => s.clearAll);
+
+  const renderFavorite: ListRenderItem<CableCarRoute> = useCallback(
+    ({ item }) => (
       <View style={styles.card}>
         <Text style={styles.heartIcon}>♥</Text>
         <View style={styles.cardContent}>
@@ -20,25 +31,45 @@ export function FavoritesScreen(): React.JSX.Element {
             {item.duration} min · ${item.ticketPrice.toLocaleString('es-CO')}
           </Text>
         </View>
+        <Pressable
+          style={({ pressed }) => [styles.removeBtn, pressed && { opacity: 0.6 }]}
+          onPress={() => removeRoute(item.id)}
+        >
+          <Text style={styles.removeText}>Quitar</Text>
+        </Pressable>
       </View>
-    );
-  }, []);
+    ),
+    [removeRoute]
+  );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.subtitle}>
-        Tus rutas de cable guardadas para acceso rápido
-      </Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.subtitle}>
+          {savedRoutes.length === 0
+            ? 'Aún no has guardado rutas'
+            : `${savedRoutes.length} ruta${savedRoutes.length === 1 ? '' : 's'} guardada${savedRoutes.length === 1 ? '' : 's'}`}
+        </Text>
+        {savedRoutes.length > 0 && (
+          <Pressable onPress={clearAll}>
+            <Text style={styles.clearText}>Limpiar todo</Text>
+          </Pressable>
+        )}
+      </View>
 
       <FlatList
-        data={FAVORITES}
+        data={savedRoutes}
         keyExtractor={(item) => item.id}
         renderItem={renderFavorite}
         contentContainerStyle={styles.list}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No tienes rutas favoritas todavía</Text>
+            <Text style={styles.emptyIcon}>♡</Text>
+            <Text style={styles.emptyText}>No tienes rutas favoritas</Text>
+            <Text style={styles.emptySubText}>
+              Ve al detalle de una ruta y pulsa “Guardar en favoritos”
+            </Text>
           </View>
         }
         showsVerticalScrollIndicator={false}
@@ -52,16 +83,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  subtitle: {
-    fontSize: TYPOGRAPHY.size.sm,
-    color: COLORS.textSecondary,
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: SPACING.base,
     paddingTop: SPACING.base,
     paddingBottom: SPACING.sm,
   },
+  subtitle: {
+    fontSize: TYPOGRAPHY.size.sm,
+    color: COLORS.textSecondary,
+    flex: 1,
+  },
+  clearText: {
+    fontSize: TYPOGRAPHY.size.sm,
+    color: COLORS.error,
+    fontWeight: TYPOGRAPHY.weight.semibold,
+  },
   list: {
     paddingHorizontal: SPACING.base,
     paddingBottom: SPACING.xl,
+    flexGrow: 1,
   },
   card: {
     backgroundColor: COLORS.surface,
@@ -70,13 +113,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: SPACING.md,
   },
   heartIcon: {
     fontSize: TYPOGRAPHY.size.lg,
     color: COLORS.error,
-    marginTop: 2,
   },
   cardContent: {
     flex: 1,
@@ -103,15 +145,37 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.size.xs,
     color: COLORS.textMuted,
   },
+  removeBtn: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+  },
+  removeText: {
+    fontSize: TYPOGRAPHY.size.xs,
+    color: COLORS.error,
+    fontWeight: TYPOGRAPHY.weight.semibold,
+  },
   separator: {
     height: SPACING.sm,
   },
   emptyContainer: {
     paddingTop: SPACING.xxl,
     alignItems: 'center',
+    paddingHorizontal: SPACING.xl,
+  },
+  emptyIcon: {
+    fontSize: 48,
+    color: COLORS.textMuted,
+    marginBottom: SPACING.sm,
   },
   emptyText: {
     fontSize: TYPOGRAPHY.size.base,
+    color: COLORS.textPrimary,
+    fontWeight: TYPOGRAPHY.weight.semibold,
+    marginBottom: SPACING.xs,
+  },
+  emptySubText: {
+    fontSize: TYPOGRAPHY.size.sm,
     color: COLORS.textMuted,
+    textAlign: 'center',
   },
 });

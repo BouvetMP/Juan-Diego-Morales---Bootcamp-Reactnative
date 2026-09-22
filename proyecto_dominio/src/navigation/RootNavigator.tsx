@@ -8,8 +8,9 @@ import { DetailScreen } from '../screens/DetailScreen';
 import { FavoritesScreen } from '../screens/FavoritesScreen';
 import { COLORS } from '../theme';
 import type { HomeStackParamList, RootTabParamList } from './types';
+import { useSavedStore } from '../stores/savedStore';
 
-// STACK INTERNO
+
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 
 function HomeStackNavigator(): React.JSX.Element {
@@ -31,21 +32,21 @@ function HomeStackNavigator(): React.JSX.Element {
       <HomeStack.Screen
         name="HomeDetail"
         component={DetailScreen}
-        options={({ route }: { route: { params: HomeStackParamList['HomeDetail'] } }) => ({
-          title: route.params.name,
-        })}
+        options={({ route }) => ({ title: route.params.name })}
       />
     </HomeStack.Navigator>
   );
 }
 
-// TAB NAVIGATOR RAÍZ
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 export function RootNavigator(): React.JSX.Element {
+  const savedCount = useSavedStore((s) => s.savedRoutes.length);
+
   return (
     <Tab.Navigator
-      screenOptions={({ route }: { route: { name: keyof RootTabParamList } }) => ({
+      detachInactiveScreens={false}
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: COLORS.accent,
         tabBarInactiveTintColor: COLORS.textSecondary,
@@ -53,7 +54,7 @@ export function RootNavigator(): React.JSX.Element {
           backgroundColor: COLORS.surface,
           borderTopColor: COLORS.border,
         },
-        tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => {
+        tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
 
           if (route.name === 'Home') {
@@ -81,6 +82,12 @@ export function RootNavigator(): React.JSX.Element {
           headerStyle: { backgroundColor: COLORS.surface },
           headerTintColor: COLORS.accent,
           headerTitleStyle: { fontWeight: '700' },
+          tabBarBadge: savedCount > 0 ? savedCount : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: COLORS.error,
+            fontSize: 11,
+            fontWeight: '700',
+          },
         }}
       />
     </Tab.Navigator>
