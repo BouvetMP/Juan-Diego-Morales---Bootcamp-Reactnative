@@ -1,6 +1,7 @@
-import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
-import { CableCarRoute } from "../types";
+import React from 'react';
+import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
+import { CableCarRoute } from '../types';
+import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../theme';
 
 interface ItemCardProps {
   route: CableCarRoute;
@@ -14,7 +15,7 @@ export default function ItemCard({
   return (
     <View style={styles.card}>
       <Image
-        source={{ uri: "https://picsum.photos/300/150" }}
+        source={{ uri: 'https://picsum.photos/300/150' }}
         style={styles.image}
         resizeMode="cover"
       />
@@ -26,73 +27,77 @@ export default function ItemCard({
       <Text style={styles.subtitle}>{route.subtitle}</Text>
 
       <View style={styles.infoRow}>
-        <Text style={styles.infoText}>{route.duration} min</Text>
+        <Text style={styles.infoText}>⏱️ {route.duration} min</Text>
         <Text style={styles.infoText}>
-          ${route.ticketPrice.toLocaleString("es-CO")}
+          ${route.ticketPrice.toLocaleString('es-CO')}
         </Text>
       </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        activeOpacity={0.7}
+      <Pressable
+        style={({ pressed }) => [
+          styles.button,
+          pressed && styles.buttonPressed,
+        ]}
         onPress={onPress}
       >
         <Text style={styles.buttonText}>Ver detalles</Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#161b22",
-    borderRadius: 16,
-    padding: 16,
-    width: "100%",
-    marginBottom: 16,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.base,
     borderWidth: 1,
-    borderColor: "#30363d",
+    borderColor: COLORS.border,
   },
   image: {
-    width: "100%",
+    width: '100%',
     height: 140,
-    borderRadius: 12,
-    marginBottom: 12,
+    borderRadius: RADIUS.md,
+    marginBottom: SPACING.md,
   },
   name: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#ffffff",
-    marginBottom: 4,
+    fontSize: TYPOGRAPHY.size.md,
+    fontWeight: TYPOGRAPHY.weight.bold,
+    color: COLORS.textPrimary,
+    marginBottom: SPACING.xs,
   },
   stations: {
-    fontSize: 14,
-    color: "#61DAFB",
-    marginBottom: 4,
+    fontSize: TYPOGRAPHY.size.sm,
+    color: COLORS.accent,
+    marginBottom: SPACING.xs,
   },
   subtitle: {
-    fontSize: 12,
-    color: "#8b949e",
-    marginBottom: 12,
+    fontSize: TYPOGRAPHY.size.xs,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.md,
   },
   infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
   },
   infoText: {
-    fontSize: 13,
-    color: "#ffffff",
+    fontSize: TYPOGRAPHY.size.sm,
+    color: COLORS.textPrimary,
   },
   button: {
-    backgroundColor: "#61DAFB",
-    paddingVertical: 10,
-    borderRadius: 20,
-    alignItems: "center",
+    backgroundColor: COLORS.accent,
+    paddingVertical: SPACING.sm + 2,
+    borderRadius: RADIUS.full,
+    alignItems: 'center',
+  },
+  buttonPressed: {
+    opacity: 0.75,
+    backgroundColor: COLORS.info,
   },
   buttonText: {
-    color: "#0d1117",
-    fontSize: 14,
-    fontWeight: "bold",
+    color: COLORS.background,
+    fontSize: TYPOGRAPHY.size.sm,
+    fontWeight: TYPOGRAPHY.weight.bold,
   },
 });
