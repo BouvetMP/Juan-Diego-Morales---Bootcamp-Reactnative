@@ -15,4 +15,5 @@ export type HomeStackParamList = {
     ticketPrice: number;
     subtitle: string;
   };
+  CreateRoute: undefined;
 };

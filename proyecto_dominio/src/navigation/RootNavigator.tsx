@@ -5,12 +5,15 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { HomeScreen } from '../screens/HomeScreen';
 import { DetailScreen } from '../screens/DetailScreen';
+import { CreateScreen } from '../screens/CreateScreen';
 import { FavoritesScreen } from '../screens/FavoritesScreen';
 import { COLORS } from '../theme';
 import type { HomeStackParamList, RootTabParamList } from './types';
 import { useSavedStore } from '../stores/savedStore';
 
-
+// ============================================
+// STACK INTERNO — Pestaña Rutas
+// ============================================
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 
 function HomeStackNavigator(): React.JSX.Element {
@@ -32,12 +35,22 @@ function HomeStackNavigator(): React.JSX.Element {
       <HomeStack.Screen
         name="HomeDetail"
         component={DetailScreen}
-        options={({ route }) => ({ title: route.params.name })}
+        options={({ route }: { route: { params: HomeStackParamList['HomeDetail'] } }) => ({
+          title: route.params.name,
+        })}
+      />
+      <HomeStack.Screen
+        name="CreateRoute"
+        component={CreateScreen}
+        options={{ title: 'Nueva Ruta' }}
       />
     </HomeStack.Navigator>
   );
 }
 
+// ============================================
+// TAB NAVIGATOR RAÍZ
+// ============================================
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 export function RootNavigator(): React.JSX.Element {
@@ -46,7 +59,7 @@ export function RootNavigator(): React.JSX.Element {
   return (
     <Tab.Navigator
       detachInactiveScreens={false}
-      screenOptions={({ route }) => ({
+      screenOptions={({ route }: { route: { name: keyof RootTabParamList } }) => ({
         headerShown: false,
         tabBarActiveTintColor: COLORS.accent,
         tabBarInactiveTintColor: COLORS.textSecondary,
@@ -54,7 +67,7 @@ export function RootNavigator(): React.JSX.Element {
           backgroundColor: COLORS.surface,
           borderTopColor: COLORS.border,
         },
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
 
           if (route.name === 'Home') {

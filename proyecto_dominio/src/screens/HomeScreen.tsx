@@ -6,28 +6,33 @@ import {
   TextInput,
   StyleSheet,
   Platform,
+  ActivityIndicator,
+  Pressable,
   ListRenderItem,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { CableCarRoute } from '../types';
 import ItemCard from '../components/ItemCard';
-import { cableCarRoutes } from '../data/mockData';
+import { useRoutes } from '../hooks/useRoutes';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../theme';
+import type { CableCarRoute } from '../types';
 import type { HomeStackParamList } from '../navigation/types';
 
 type HomeNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeList'>;
 
 export function HomeScreen(): React.JSX.Element {
   const navigation = useNavigation<HomeNavigationProp>();
-  const [query, setQuery] = useState<string>('');
+  const [query, setQuery] = useState('');
+
+  const { data, isLoading, isError, error, refetch, isFetching } = useRoutes();
+
+  const routes = data ?? [];
 
   const filteredRoutes = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
-    if (!trimmed) return cableCarRoutes;
-
-    return cableCarRoutes.filter(
+    if (!trimmed) return routes;
+    return routes.filter(
       (route) =>
         route.name.toLowerCase().includes(trimmed) ||
         route.route.toLowerCase().includes(trimmed) ||
@@ -35,9 +40,8 @@ export function HomeScreen(): React.JSX.Element {
         route.destinationStation.toLowerCase().includes(trimmed) ||
         route.subtitle.toLowerCase().includes(trimmed)
     );
-  }, [query]);
+  }, [query, routes]);
 
-  // Navegar al detalle pasando params tipados
   const handleItemPress = useCallback(
     (route: CableCarRoute) => {
       navigation.navigate('HomeDetail', {
@@ -61,23 +65,62 @@ export function HomeScreen(): React.JSX.Element {
     [handleItemPress]
   );
 
-  const renderEmpty = useCallback(
-    () => (
+  const renderEmpty = useCallback(() => {
+    if (isLoading) return null;
+    return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyIcon}>🚡</Text>
-        <Text style={styles.emptyText}>Sin resultados para "{query}"</Text>
+        <Text style={styles.emptyText}>
+          {query.trim()
+            ? `Sin resultados para "${query}"`
+            : 'No hay rutas disponibles'}
+        </Text>
         <Text style={styles.emptySubText}>
-          Intenta buscando por portal, estación o línea
+          {query.trim()
+            ? 'Prueba con otro portal o línea'
+            : 'Desliza hacia abajo para actualizar'}
         </Text>
       </View>
-    ),
-    [query]
-  );
+    );
+  }, [query, isLoading]);
+
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={COLORS.accent} />
+        <Text style={styles.loadingText}>Cargando rutas de cable...</Text>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.emptyIcon}>⚠️</Text>
+        <Text style={styles.emptyText}>No se pudieron cargar las rutas</Text>
+        <Text style={styles.emptySubText}>
+          {error?.message ?? 'Error de red'}
+        </Text>
+        <Pressable style={styles.retryButton} onPress={() => refetch()}>
+          <Text style={styles.retryText}>Reintentar</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerSubtitle}>Rutas de portal a portal</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.headerSubtitle}>Rutas desde la API</Text>
+          <Pressable
+            style={styles.createChip}
+            onPress={() => navigation.navigate('CreateRoute')}
+          >
+            <Text style={styles.createChipText}>+ Nueva</Text>
+          </Pressable>
+        </View>
+
         <TextInput
           style={styles.searchInput}
           placeholder="Buscar ruta, portal o estación..."
@@ -101,6 +144,9 @@ export function HomeScreen(): React.JSX.Element {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
+        // Pull-to-refresh
+        refreshing={isFetching && !isLoading}
+        onRefresh={refetch}
       />
     </View>
   );
@@ -111,6 +157,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  centered: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: SPACING.xl,
+  },
+  loadingText: {
+    marginTop: SPACING.md,
+    color: COLORS.textSecondary,
+    fontSize: TYPOGRAPHY.size.sm,
+  },
   header: {
     paddingHorizontal: SPACING.base,
     paddingTop: SPACING.sm,
@@ -118,10 +176,26 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
   headerSubtitle: {
     fontSize: TYPOGRAPHY.size.sm,
     color: COLORS.textSecondary,
-    marginBottom: SPACING.md,
+  },
+  createChip: {
+    backgroundColor: COLORS.accentDim,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.full,
+  },
+  createChipText: {
+    color: COLORS.accent,
+    fontWeight: TYPOGRAPHY.weight.bold,
+    fontSize: TYPOGRAPHY.size.sm,
   },
   searchInput: {
     backgroundColor: COLORS.surface,
@@ -161,5 +235,17 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.size.sm,
     color: COLORS.textSecondary,
     textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: SPACING.lg,
+    backgroundColor: COLORS.accent,
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.md,
+    borderRadius: RADIUS.full,
+  },
+  retryText: {
+    color: COLORS.background,
+    fontWeight: TYPOGRAPHY.weight.bold,
+    fontSize: TYPOGRAPHY.size.base,
   },
 });
