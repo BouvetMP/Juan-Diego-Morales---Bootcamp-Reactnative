@@ -68,10 +68,10 @@ Con pnpm:
 pnpm install
 ```
 
-O con npm:
+Y con pnpm:
 
 ```bash
-npm install
+npx expo install react-dom react-native-web
 ```
 
 ---

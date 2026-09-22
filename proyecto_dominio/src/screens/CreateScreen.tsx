@@ -34,7 +34,12 @@ export function CreateScreen(): React.JSX.Element {
 
   async function handleSubmit() {
     if (!name.trim() || !origin.trim() || !destination.trim()) {
-      Alert.alert('Campos incompletos', 'Nombre, origen y destino son obligatorios.');
+      const warningMsg = 'Nombre, origen y destino son obligatorios.';
+      if (Platform.OS === 'web') {
+        alert(warningMsg);
+      } else {
+        Alert.alert('Campos incompletos', warningMsg);
+      }
       return;
     }
 
@@ -48,11 +53,30 @@ export function CreateScreen(): React.JSX.Element {
         ticketPrice: Number(price) || 3500,
         subtitle: subtitle.trim() || 'Nueva ruta de cable',
       });
-      Alert.alert('Éxito', 'Ruta creada correctamente (API).', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+
+      // 🔔 1. Mensaje de confirmación
+      const successMsg = '¡Ruta creada exitosamente!';
+
+      if (Platform.OS === 'web') {
+        alert(successMsg);
+        // 🔄 2. Redirección inmediata a inicio en Web
+        navigation.navigate('HomeList');
+      } else {
+        // 🔄 2. Redirección al presionar "OK" en dispositivos móviles
+        Alert.alert('¡Éxito!', 'La nueva ruta ha sido agregada al catálogo.', [
+          {
+            text: 'Ir a Inicio',
+            onPress: () => navigation.navigate('HomeList'),
+          },
+        ]);
+      }
     } catch {
-      Alert.alert('Error', 'No se pudo crear la ruta. Intenta de nuevo.');
+      const errorMsg = 'No se pudo crear la ruta. Intenta de nuevo.';
+      if (Platform.OS === 'web') {
+        alert(errorMsg);
+      } else {
+        Alert.alert('Error', errorMsg);
+      }
     }
   }
 
@@ -67,16 +91,16 @@ export function CreateScreen(): React.JSX.Element {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.hint}>
-          Los datos se envían por POST a la API. JSONPlaceholder simula la creación.
+          Completa la información para agregar una nueva ruta al catálogo.
         </Text>
 
-        <Field label="Nombre de la ruta" value={name} onChangeText={setName} placeholder="Cable Portal ..." />
-        <Field label="Línea" value={line} onChangeText={setLine} placeholder="Línea H" />
-        <Field label="Estación origen" value={origin} onChangeText={setOrigin} placeholder="Portal Tunal" />
-        <Field label="Estación destino" value={destination} onChangeText={setDestination} placeholder="Mirador" />
+        <Field label="Nombre de la ruta" value={name} onChangeText={setName} placeholder="Ej. Cable Portal Suba" />
+        <Field label="Línea" value={line} onChangeText={setLine} placeholder="Ej. Línea H" />
+        <Field label="Estación origen" value={origin} onChangeText={setOrigin} placeholder="Ej. Portal Tunal" />
+        <Field label="Estación destino" value={destination} onChangeText={setDestination} placeholder="Ej. Mirador" />
         <Field label="Duración (min)" value={duration} onChangeText={setDuration} placeholder="25" keyboardType="numeric" />
         <Field label="Tarifa (COP)" value={price} onChangeText={setPrice} placeholder="3150" keyboardType="numeric" />
-        <Field label="Descripción" value={subtitle} onChangeText={setSubtitle} placeholder="Se cruza con..." multiline />
+        <Field label="Descripción" value={subtitle} onChangeText={setSubtitle} placeholder="Descripción breve de la ruta..." multiline />
 
         <Pressable
           style={({ pressed }) => [
