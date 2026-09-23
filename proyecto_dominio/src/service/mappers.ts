@@ -1,16 +1,16 @@
 import type { CableCarRoute, JsonPlaceholderPost } from '../types';
 
 const BOGOTA_ROUTES_TEMPLATES = [
-  { name: 'TransMiCable Ciudad Bolívar', route: 'Línea H', origin: 'Tunal', dest: 'Mirador del Paraíso', subtitle: 'Conecta la Troncal Tunal con el Mirador del Paraíso', duration: 13, price: 3150 },
-  { name: 'Cable San Cristóbal', route: 'Línea L', origin: '20 de Julio', dest: 'Altamira', subtitle: 'Integra con la Troncal 20 de Julio', duration: 10, price: 3150 },
-  { name: 'Cable Monserrate', route: 'Línea Turística', origin: 'Pie de Cerro', dest: 'Santuario Monserrate', subtitle: 'Acceso directo al cerro de Monserrate', duration: 7, price: 14000 },
-  { name: 'Cable Portal 80 - Suba', route: 'Línea 1', origin: 'Portal 80', dest: 'Portal Suba', subtitle: 'Se cruza con la Troncal Calle 80', duration: 40, price: 5500 },
-  { name: 'Cable Portal Américas - Sur', route: 'Línea 2', origin: 'Portal Américas', dest: 'Portal Sur', subtitle: 'Se cruza con la Troncal NQS', duration: 30, price: 6000 },
-  { name: 'Cable Potosí - Cazucá', route: 'Línea P', origin: 'Portal Sur', dest: 'Potosí', subtitle: 'Conexión entre Soacha y Bogotá', duration: 18, price: 3150 },
-  { name: 'Cable Usme - El Destino', route: 'Línea 8', origin: 'Portal Usme', dest: 'El Destino', subtitle: 'Conexión rural-urbana en el sur', duration: 32, price: 3150 },
-  { name: 'Cable Chapinero - La Calera', route: 'Línea 6', origin: 'Calle 72', dest: 'La Calera', subtitle: 'Transporte ecológico hacia los cerros', duration: 20, price: 8500 },
-  { name: 'Cable Fontibón - Eldorado', route: 'Línea 7', origin: 'Fontibón Centro', dest: 'Portal Eldorado', subtitle: 'Ruta de apoyo al Aeropuerto El Dorado', duration: 22, price: 3500 },
-  { name: 'Cable Portal Norte - Usaquén', route: 'Línea 3', origin: 'Portal Norte', dest: 'Usaquén Alta', subtitle: 'Conexión directa con la Autopista Norte', duration: 25, price: 4500 },
+  { name: 'Eje Noroccidente', route: 'Línea C-D 18', origin: 'Portal Suba', dest: 'Portal 80', subtitle: 'Termina en Portal 80 · Conecta la Troncal Calle 80', duration: 45, price: 3500 },
+  { name: 'Corredor Occidente', route: 'Línea C-K 26', origin: 'Portal Suba', dest: 'Portal El Dorado', subtitle: 'Termina en Portal El Dorado · Conecta la Troncal Calle 26', duration: 60, price: 3500 },
+  { name: 'Norte Exprés', route: 'Línea B-D 9', origin: 'Portal Norte', dest: 'Portal 80', subtitle: 'Termina en Portal 80 · Conecta la Troncal Calle 80', duration: 50, price: 3500 },
+  { name: 'Diagonal Norte', route: 'Línea B-K 11', origin: 'Portal Norte', dest: 'Portal El Dorado', subtitle: 'Termina en Portal El Dorado · Conecta la Troncal Calle 26', duration: 65, price: 3500 },
+  { name: 'Gran Diagonal', route: 'Línea B-F 21', origin: 'Portal Norte', dest: 'Portal Américas', subtitle: 'Termina en Portal Américas · Conecta la Troncal Américas', duration: 90, price: 3500 },
+  { name: 'Conexión Aérea', route: 'Línea D-K 5', origin: 'Portal 80', dest: 'Portal El Dorado', subtitle: 'Termina en Portal El Dorado · Conecta la Troncal Calle 26 hacia el aeropuerto', duration: 35, price: 3500 },
+  { name: 'Cruce Oriental', route: 'Línea D-L 14', origin: 'Portal 80', dest: 'Portal 20 de Julio', subtitle: 'Termina en Portal 20 de Julio · Conecta la Troncal Carrera 10', duration: 75, price: 3500 },
+  { name: 'Eje Occidente', route: 'Línea F-K 8', origin: 'Portal Américas', dest: 'Portal El Dorado', subtitle: 'Termina en Portal El Dorado · Conecta la Troncal Calle 26', duration: 40, price: 3500 },
+  { name: 'Transversal Sur', route: 'Línea F-L 6', origin: 'Portal Américas', dest: 'Portal 20 de Julio', subtitle: 'Termina en Portal 20 de Julio · Conecta la Troncal Carrera 10', duration: 60, price: 3500 },
+  { name: 'Eje Suroriental', route: 'Línea G-L 4', origin: 'Portal Sur', dest: 'Portal 20 de Julio', subtitle: 'Termina en Portal 20 de Julio · Conecta la Troncal Carrera 10', duration: 45, price: 3500 },
 ];
 
 export function mapPostToRoute(post: JsonPlaceholderPost): CableCarRoute {
