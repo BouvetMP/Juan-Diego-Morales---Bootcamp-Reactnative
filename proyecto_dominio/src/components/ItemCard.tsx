@@ -5,6 +5,7 @@ import { getColors, TYPOGRAPHY, SPACING, RADIUS } from "../theme";
 import { useSavedStore } from "../stores/savedStore";
 import { Ionicons } from "@expo/vector-icons";
 import { usePreferences } from "../hooks/usePreferences";
+import AnimatedCard from "./AnimatedCard"; 
 
 interface ItemCardProps {
   route: CableCarRoute;
@@ -18,7 +19,7 @@ const ItemCard = ({ route, onPress }: ItemCardProps) => {
   const colors = getColors(preferences.darkMode);
 
   return (
-    <Pressable
+    <AnimatedCard
       style={[
         styles.card,
         { backgroundColor: colors.surface, borderColor: colors.border },
@@ -93,7 +94,7 @@ const ItemCard = ({ route, onPress }: ItemCardProps) => {
           </Text>
         </View>
       </View>
-    </Pressable>
+    </AnimatedCard>
   );
 };
 

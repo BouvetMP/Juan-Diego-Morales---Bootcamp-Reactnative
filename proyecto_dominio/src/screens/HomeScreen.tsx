@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useRef, useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,10 @@ import {
   StyleSheet,
   ActivityIndicator,
   Pressable,
+  Animated,
+  LayoutAnimation,
+  Platform,
+  UIManager,
 } from "react-native";
 import { useRoutes } from "../hooks/useRoutes";
 import { usePreferences } from "../hooks/usePreferences";
@@ -16,7 +20,52 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { HomeStackParamList } from "../navigation/types";
 import { CableCarRoute } from "../types/index";
 
+// Habilitamos LayoutAnimation para dispositivos Android
+if (Platform.OS === "android") {
+  UIManager.setLayoutAnimationEnabledExperimental?.(true);
+}
+
 type Props = NativeStackScreenProps<HomeStackParamList, "HomeList">;
+
+// Componente Wrapper para la Animación de Entrada en Cascada (Stagger)
+const StaggerItem = ({
+  children,
+  index,
+}: {
+  children: React.ReactNode;
+  index: number;
+}) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 350,
+        delay: index * 80, 
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 350,
+        delay: index * 80,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [index]);
+
+  return (
+    <Animated.View
+      style={{
+        opacity: fadeAnim,
+        transform: [{ translateY: slideAnim }],
+      }}
+    >
+      {children}
+    </Animated.View>
+  );
+};
 
 export const HomeScreen = ({ navigation }: Props) => {
   const {
@@ -54,6 +103,16 @@ export const HomeScreen = ({ navigation }: Props) => {
 
     return list;
   }, [routes, preferences.sortOrder, preferences.showOnlySaved, savedRoutes]);
+
+  // Ejecución de LayoutAnimation automática en base a filtros y mutaciones
+  useLayoutEffect(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  }, [
+    preferences.showOnlySaved,
+    preferences.sortOrder,
+    savedRoutes,
+    filteredAndSortedRoutes,
+  ]);
 
   if (isLoading) {
     return (
@@ -110,10 +169,10 @@ export const HomeScreen = ({ navigation }: Props) => {
             No hay rutas que coincidan con los filtros de Ajustes.
           </Text>
         }
-        renderItem={({ item }: { item: CableCarRoute }) => {
+        renderItem={({ item, index }: { item: CableCarRoute; index: number }) => {
           const isPopular = preferences.showPopular && item.duration <= 15;
           return (
-            <View>
+            <StaggerItem index={index}>
               {isPopular && (
                 <View
                   style={[
@@ -135,7 +194,7 @@ export const HomeScreen = ({ navigation }: Props) => {
                 route={item}
                 onPress={() => navigation.navigate("HomeDetail", item)}
               />
-            </View>
+            </StaggerItem>
           );
         }}
       />

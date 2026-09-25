@@ -3,16 +3,15 @@ import { View, Text, FlatList, StyleSheet } from "react-native";
 import { useSavedStore } from "../stores/savedStore";
 import ItemCard from "../components/ItemCard";
 import { getColors, TYPOGRAPHY, SPACING } from "../theme";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useNavigation } from "@react-navigation/native";
-import { HomeStackParamList } from "../navigation/types";
+import { RootTabParamList } from "../navigation/types";
 import { CableCarRoute } from "../types/index";
 import { usePreferences } from "../hooks/usePreferences";
 
 export const FavoritesScreen = () => {
   const savedRoutes = useSavedStore((state) => state.savedRoutes);
-  const navigation =
-    useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+  const navigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
   const { preferences } = usePreferences();
   const colors = getColors(preferences.darkMode);
 
@@ -32,7 +31,12 @@ export const FavoritesScreen = () => {
         renderItem={({ item }: { item: CableCarRoute }) => (
           <ItemCard
             route={item}
-            onPress={() => navigation.navigate("HomeDetail", item)}
+            onPress={() =>
+              navigation.navigate("Home", {
+                screen: "HomeDetail",
+                params: item,
+              })
+            }
           />
         )}
       />

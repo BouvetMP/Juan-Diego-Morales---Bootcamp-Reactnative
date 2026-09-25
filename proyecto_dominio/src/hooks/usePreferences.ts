@@ -16,7 +16,10 @@ export interface PreferencesState {
   preferences: Preferences;
   toggleDarkMode: () => void;
   setDarkMode: (value: boolean) => void;
-  updatePreference: (key: string, value: any) => void;
+  updatePreference: <K extends keyof Preferences>(
+    key: K,
+    value: Preferences[K]
+  ) => void;
   loadInit: () => Promise<void>;
 }
 
@@ -52,7 +55,7 @@ export const usePreferencesStore = create<PreferencesState>()(
             darkMode: value,
           },
         })),
-      updatePreference: (key: string, value: any) =>
+      updatePreference: (key, value) =>
         set((state) => {
           const updated = { ...state.preferences, [key]: value };
           if (key === "isDarkMode" || key === "darkMode") {
@@ -64,7 +67,12 @@ export const usePreferencesStore = create<PreferencesState>()(
             isDarkMode: updated.isDarkMode,
           };
         }),
-      loadInit: async () => {},
+      loadInit: async () => {
+        // Si Zustand aún no ha terminado de leer AsyncStorage, forzamos la hidratación
+        if (!usePreferencesStore.persist.hasHydrated()) {
+          await usePreferencesStore.persist.rehydrate();
+        }
+      },
     }),
     {
       name: "cable-bogota-preferences",

@@ -61,16 +61,34 @@ export const createCableRoute = async (
   payload: CreateRoutePayload,
 ): Promise<CableCarRoute> => {
   const response = await api.post("/posts", payload);
-  return { ...payload, id: String(response.data.id || Date.now()) };
+  // JSONPlaceholder siempre responde con id: 101. Asignamos Date.now() para asegurar ID único local
+  const uniqueId = String(Date.now());
+  return {
+    ...payload,
+    id: uniqueId,
+  };
 };
 
 export const updateCableRoute = async (
   payload: UpdateRoutePayload,
 ): Promise<CableCarRoute> => {
   const numericId = Number(payload.id);
+
+  // JSONPlaceholder solo admite PUT real en IDs 1 a 100
   if (!isNaN(numericId) && numericId <= 100) {
-    await api.put(`/posts/${payload.id}`, payload);
+    const response = await api.put(`/posts/${payload.id}`, payload);
+    return {
+      ...(payload as CableCarRoute),
+      ...response.data,
+      id: String(payload.id),
+    };
   }
+
+  // Rutas locales creadas durante la sesión (id > 100 o timestamp)
+  console.info(
+    `[updateCableRoute] La ruta con ID "${payload.id}" es local. Se actualiza en caché/estado sin petición al mock.`,
+  );
+
   return payload as CableCarRoute;
 };
 

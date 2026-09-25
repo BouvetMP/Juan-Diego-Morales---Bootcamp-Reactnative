@@ -185,10 +185,17 @@ export const useAuthStore = create<AuthState>()(
       checkAuthStatus: async () => {
         try {
           const token = await tokenService.getAccessToken();
-          if (!token) {
+          const currentUser = get().user;
+
+          if (!token || !currentUser) {
+            await tokenService.clearTokens();
             set({ isAuthenticated: false, user: null });
+            return;
           }
+
+          set({ isAuthenticated: true, user: currentUser });
         } catch {
+          await tokenService.clearTokens();
           set({ isAuthenticated: false, user: null });
         }
       },

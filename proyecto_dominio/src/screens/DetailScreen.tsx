@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Image,
   Pressable,
   ActivityIndicator,
+  Animated,
 } from "react-native";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -17,6 +18,7 @@ import { usePreferences } from "../stores/usePreferences";
 import { TYPOGRAPHY, SPACING, RADIUS, getColors } from "../theme";
 import type { HomeStackParamList } from "../navigation/types";
 import type { CableCarRoute } from "../types";
+import { ProgressBar } from "../components/ProgressBar"; // Importamos ProgressBar
 
 type DetailNavProp = NativeStackNavigationProp<
   HomeStackParamList,
@@ -28,7 +30,6 @@ export function DetailScreen(): React.JSX.Element {
   const navigation = useNavigation<DetailNavProp>();
   const route = useRoute<DetailRouteProp>();
 
-  // Maneja tanto el envío de un ID ({ id: "1" }) como el paso directo del objeto de ruta
   const routeParam = route.params as any;
   const routeId = typeof routeParam === "string" ? routeParam : routeParam?.id;
 
@@ -49,11 +50,29 @@ export function DetailScreen(): React.JSX.Element {
   );
   const toggleRoute = useSavedStore((s) => s.toggleRoute);
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
   useEffect(() => {
     if (cableRoute?.name) {
       navigation.setOptions({ title: cableRoute.name });
     }
-  }, [navigation, cableRoute?.name]);
+
+    if (cableRoute) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [navigation, cableRoute]);
 
   if (!cableRoute) {
     return (
@@ -66,136 +85,164 @@ export function DetailScreen(): React.JSX.Element {
     );
   }
 
+  const estimatedOcupation = Math.min(cableRoute.duration / 90, 1);
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
     >
-      <Image
-        source={{ uri: cableRoute.imageUrl || "https://picsum.photos/600/280" }}
-        style={styles.image}
-        resizeMode="cover"
-      />
-
-      <Text style={[styles.name, { color: colors.text }]}>
-        {cableRoute.name}
-      </Text>
-
-      <View style={[styles.badge, { backgroundColor: colors.accentDim }]}>
-        <Text style={[styles.badgeText, { color: colors.primary }]}>
-          {cableRoute.route}
-        </Text>
-      </View>
-
-      <Text style={[styles.subtitle, { color: colors.subtext }]}>
-        {cableRoute.subtitle}
-      </Text>
-
-      <Pressable
-        style={({ pressed }) => [
-          styles.editButton,
-          { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
-          pressed && { opacity: 0.7 },
-        ]}
-        onPress={() => navigation.navigate("EditRoute", { id: cableRoute.id })}
+      <Animated.View
+        style={{
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+          gap: SPACING.md,
+        }}
       >
-        <Text style={[styles.editButtonText, { color: colors.text }]}>
-          ✏️ Editar esta ruta
-        </Text>
-      </Pressable>
+        <Image
+          source={{ uri: cableRoute.imageUrl || "https://picsum.photos/600/280" }}
+          style={styles.image}
+          resizeMode="cover"
+        />
 
-      <Pressable
-        style={({ pressed }) => [
-          styles.saveButton,
-          { backgroundColor: colors.card, borderColor: colors.primary },
-          isSaved && {
-            backgroundColor: colors.accentDim,
-            borderColor: colors.danger,
-          },
-          pressed && styles.saveButtonPressed,
-        ]}
-        onPress={() => toggleRoute(cableRoute)}
-      >
-        <Text
+        <Text style={[styles.name, { color: colors.text }]}>
+          {cableRoute.name}
+        </Text>
+
+        <View style={[styles.badge, { backgroundColor: colors.accentDim }]}>
+          <Text style={[styles.badgeText, { color: colors.primary }]}>
+            {cableRoute.route}
+          </Text>
+        </View>
+
+        <Text style={[styles.subtitle, { color: colors.subtext }]}>
+          {cableRoute.subtitle}
+        </Text>
+
+        <View
           style={[
-            styles.saveButtonText,
-            { color: colors.primary },
-            isSaved && { color: colors.danger },
+            styles.field,
+            { backgroundColor: colors.card, borderColor: colors.border },
           ]}
         >
-          {isSaved ? "♥ Quitar de favoritos" : "♡ Guardar en favoritos"}
-        </Text>
-      </Pressable>
+          <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
+            Nivel de Ocupación Estimado (Tiempo Real)
+          </Text>
+          <ProgressBar
+            progress={estimatedOcupation}
+            style={styles.progressBarSpacing}
+          />
+          <Text style={[styles.occupancyText, { color: colors.text }]}>
+            {Math.round(estimatedOcupation * 100)}% de capacidad ocupada
+          </Text>
+        </View>
 
-      <View
-        style={[
-          styles.field,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
-      >
-        <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
-          Estación Origen
-        </Text>
-        <Text style={[styles.fieldValue, { color: colors.text }]}>
-          {cableRoute.originStation}
-        </Text>
-      </View>
+        <Pressable
+          style={({ pressed }) => [
+            styles.editButton,
+            { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+            pressed && { opacity: 0.7 },
+          ]}
+          onPress={() => navigation.navigate("EditRoute", { id: cableRoute.id })}
+        >
+          <Text style={[styles.editButtonText, { color: colors.text }]}>
+            ✏️ Editar esta ruta
+          </Text>
+        </Pressable>
 
-      <View
-        style={[
-          styles.field,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
-      >
-        <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
-          Estación Destino
-        </Text>
-        <Text style={[styles.fieldValue, { color: colors.text }]}>
-          {cableRoute.destinationStation}
-        </Text>
-      </View>
+        <Pressable
+          style={({ pressed }) => [
+            styles.saveButton,
+            { backgroundColor: colors.card, borderColor: colors.primary },
+            isSaved && {
+              backgroundColor: colors.accentDim,
+              borderColor: colors.danger,
+            },
+            pressed && styles.saveButtonPressed,
+          ]}
+          onPress={() => toggleRoute(cableRoute)}
+        >
+          <Text
+            style={[
+              styles.saveButtonText,
+              { color: colors.primary },
+              isSaved && { color: colors.danger },
+            ]}
+          >
+            {isSaved ? "♥ Quitar de favoritos" : "♡ Guardar en favoritos"}
+          </Text>
+        </Pressable>
 
-      <View
-        style={[
-          styles.field,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
-      >
-        <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
-          Duración del trayecto
-        </Text>
-        <Text style={[styles.fieldValue, { color: colors.text }]}>
-          {cableRoute.duration} minutos
-        </Text>
-      </View>
+        <View
+          style={[
+            styles.field,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
+            Estación Origen
+          </Text>
+          <Text style={[styles.fieldValue, { color: colors.text }]}>
+            {cableRoute.originStation}
+          </Text>
+        </View>
 
-      <View
-        style={[
-          styles.field,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
-      >
-        <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
-          Tarifa de pasaje
-        </Text>
-        <Text style={[styles.fieldValue, { color: colors.primary }]}>
-          ${(cableRoute.ticketPrice || 0).toLocaleString("es-CO")} COP
-        </Text>
-      </View>
+        <View
+          style={[
+            styles.field,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
+            Estación Destino
+          </Text>
+          <Text style={[styles.fieldValue, { color: colors.text }]}>
+            {cableRoute.destinationStation}
+          </Text>
+        </View>
 
-      <View
-        style={[
-          styles.field,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
-      >
-        <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
-          Identificador de Sistema
-        </Text>
-        <Text style={[styles.fieldValue, { color: colors.text }]}>
-          {cableRoute.id}
-        </Text>
-      </View>
+        <View
+          style={[
+            styles.field,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
+            Duración del trayecto
+          </Text>
+          <Text style={[styles.fieldValue, { color: colors.text }]}>
+            {cableRoute.duration} minutos
+          </Text>
+        </View>
+
+        <View
+          style={[
+            styles.field,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
+            Tarifa de pasaje
+          </Text>
+          <Text style={[styles.fieldValue, { color: colors.primary }]}>
+            ${(cableRoute.ticketPrice || 0).toLocaleString("es-CO")} COP
+          </Text>
+        </View>
+
+        <View
+          style={[
+            styles.field,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
+            Identificador de Sistema
+          </Text>
+          <Text style={[styles.fieldValue, { color: colors.text }]}>
+            {cableRoute.id}
+          </Text>
+        </View>
+      </Animated.View>
     </ScrollView>
   );
 }
@@ -218,8 +265,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: SPACING.md,
-    gap: SPACING.md,
-    paddingBottom: 80, // Evita solapamiento con el Bottom Tab Bar
+    paddingBottom: 80,
   },
   image: {
     width: "100%",
@@ -283,5 +329,13 @@ const styles = StyleSheet.create({
   fieldValue: {
     fontSize: TYPOGRAPHY.size.base,
     fontWeight: TYPOGRAPHY.weight.semibold,
+  },
+  progressBarSpacing: {
+    marginTop: SPACING.xs,
+    marginBottom: SPACING.xs,
+  },
+  occupancyText: {
+    fontSize: TYPOGRAPHY.size.xs,
+    fontWeight: TYPOGRAPHY.weight.bold,
   },
 });
