@@ -1,0 +1,215 @@
+import React, { useEffect, useRef } from "react";
+import {
+  Animated,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+
+// ============================================
+// PASO 1: Animated.timing — fade in al montar
+// ============================================
+function FadeInCard(): React.JSX.Element {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
+
+  return (
+    <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
+      <Text style={styles.cardTitle}>👋 Hola, Animated.timing</Text>
+      <Text style={styles.cardSubtitle}>
+        Este fade in usa useNativeDriver: true
+      </Text>
+    </Animated.View>
+  );
+}
+
+// ============================================
+// PASO 2: Animated.spring — scale feedback
+// ============================================
+function SpringButton(): React.JSX.Element {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.92,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      tension: 300,
+      friction: 10,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <Pressable
+        style={styles.button}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+      >
+        <Text style={styles.buttonText}>💬 Presióname (spring)</Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+// ============================================
+// PASO 3: Animated.parallel — fade + slide
+// ============================================
+function SlideUpFadeCard(): React.JSX.Element {
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const translateYAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateYAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [opacityAnim, translateYAnim]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.card,
+        styles.cardBlue,
+        {
+          opacity: opacityAnim,
+          transform: [{ translateY: translateYAnim }],
+        },
+      ]}
+    >
+      <Text style={styles.cardTitle}>⚡ Parallel: fade + slide up</Text>
+      <Text style={styles.cardSubtitle}>
+        opacity + translateY al mismo tiempo
+      </Text>
+    </Animated.View>
+  );
+}
+
+// ============================================
+// PASO 4: Animated.sequence — bounce vertical
+// ============================================
+function BounceButton(): React.JSX.Element {
+  const bounceAnim = useRef(new Animated.Value(0)).current;
+
+  const startBounce = () => {
+    Animated.sequence([
+      Animated.timing(bounceAnim, {
+        toValue: -20,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(bounceAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  return (
+    <Animated.View style={{ transform: [{ translateY: bounceAnim }] }}>
+      <Pressable
+        style={[styles.button, styles.buttonGreen]}
+        onPress={startBounce}
+      >
+        <Text style={styles.buttonText}>🔔 Bounce (sequence)</Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+// ============================================
+// App principal
+// ============================================
+export default function App(): React.JSX.Element {
+  return (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.header}>Week 09 — Ejercicio 01</Text>
+      <Text style={styles.subheader}>
+        timing · spring · parallel · sequence
+      </Text>
+
+      <FadeInCard />
+      <SpringButton />
+      <SlideUpFadeCard />
+      <BounceButton />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+    padding: 20,
+    gap: 16,
+  },
+  header: {
+    color: "#61DAFB",
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  subheader: {
+    color: "#64748b",
+    fontSize: 13,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  card: {
+    backgroundColor: "#1e293b",
+    borderRadius: 12,
+    padding: 16,
+  },
+  cardBlue: {
+    backgroundColor: "#1e3a5f",
+  },
+  cardTitle: {
+    color: "#f1f5f9",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  cardSubtitle: {
+    color: "#64748b",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  button: {
+    backgroundColor: "#3b82f6",
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: "center",
+  },
+  buttonGreen: {
+    backgroundColor: "#16a34a",
+  },
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+});
