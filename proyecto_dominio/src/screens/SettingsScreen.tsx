@@ -12,47 +12,49 @@ import {
 } from "react-native";
 import { usePreferences } from "../hooks/usePreferences";
 import {
-  saveOperatorCode,
-  getOperatorCode,
-  deleteOperatorCode,
+  saveQuickRechargePin,
+  getQuickRechargePin,
+  deleteQuickRechargePin,
 } from "../storage/secure";
 import { getColors, TYPOGRAPHY, SPACING, RADIUS } from "../theme";
 
 export const SettingsScreen = () => {
   const { preferences, updatePreference, loadInit } = usePreferences();
-  const [operatorCodeInput, setOperatorCodeInput] = useState("");
-  const [isCodeSaved, setIsCodeSaved] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [isPinSaved, setIsPinSaved] = useState(false);
   const colors = getColors(preferences.darkMode);
 
   useEffect(() => {
     loadInit();
-    checkOperatorCode();
+    checkPinStatus();
   }, [loadInit]);
 
-  const checkOperatorCode = async () => {
-    const saved = await getOperatorCode();
-    setIsCodeSaved(!!saved);
+  const checkPinStatus = async () => {
+    const saved = await getQuickRechargePin();
+    setIsPinSaved(!!saved);
   };
 
-  const handleSaveCode = async () => {
+  const handleSavePin = async () => {
     const pinRegex = /^\d{6}$/;
-    if (!pinRegex.test(operatorCodeInput)) {
-      const msg = "El PIN debe ser exactamente 6 dígitos numéricos.";
+    if (!pinRegex.test(pinInput)) {
+      const msg = "El PIN debe ser exactamente de 6 dígitos numéricos.";
       if (Platform.OS === "web") window.alert(msg);
       else Alert.alert("Error", msg);
       return;
     }
-    await saveOperatorCode(operatorCodeInput);
-    setOperatorCodeInput("");
-    setIsCodeSaved(true);
-    if (Platform.OS === "web")
-      window.alert("✅ Código guardado de forma segura");
-    else Alert.alert("Éxito", "✅ Código guardado de forma segura");
+
+    await saveQuickRechargePin(pinInput);
+    setPinInput("");
+    setIsPinSaved(true);
+
+    const successMsg = "✅ PIN de recarga rápida guardado de forma segura";
+    if (Platform.OS === "web") window.alert(successMsg);
+    else Alert.alert("Éxito", successMsg);
   };
 
-  const handleDeleteCode = async () => {
-    await deleteOperatorCode();
-    setIsCodeSaved(false);
+  const handleDeletePin = async () => {
+    await deleteQuickRechargePin();
+    setIsPinSaved(false);
   };
 
   return (
@@ -192,7 +194,7 @@ export const SettingsScreen = () => {
       </View>
 
       <Text style={[styles.sectionTitle, { color: colors.accent }]}>
-        SEGURIDAD OPERADOR
+        SEGURIDAD DE RECARGA
       </Text>
 
       <View
@@ -202,13 +204,13 @@ export const SettingsScreen = () => {
         ]}
       >
         <Text style={[styles.label, { color: colors.textPrimary }]}>
-          Código PIN (6 dígitos)
+          PIN de Recarga Rápida (6 dígitos)
         </Text>
         <Text style={[styles.subLabel, { color: colors.textSecondary }]}>
-          Se almacena cifrado en el dispositivo.
+          Se solicitará este PIN para autorizar recargas directas a tu tarjeta TuLlave.
         </Text>
 
-        {isCodeSaved ? (
+        {isPinSaved ? (
           <View
             style={[
               styles.statusBox,
@@ -219,13 +221,13 @@ export const SettingsScreen = () => {
             ]}
           >
             <Text style={[styles.statusText, { color: colors.success }]}>
-              ✅ PIN guardado
+              ✅ PIN de recarga activo
             </Text>
             <Pressable
               style={[styles.deleteButton, { backgroundColor: colors.error }]}
-              onPress={handleDeleteCode}
+              onPress={handleDeletePin}
             >
-              <Text style={styles.deleteButtonText}>Eliminar código</Text>
+              <Text style={styles.deleteButtonText}>Eliminar PIN</Text>
             </Pressable>
           </View>
         ) : (
@@ -244,12 +246,12 @@ export const SettingsScreen = () => {
               keyboardType="numeric"
               maxLength={6}
               secureTextEntry
-              value={operatorCodeInput}
-              onChangeText={setOperatorCodeInput}
+              value={pinInput}
+              onChangeText={setPinInput}
             />
             <Pressable
               style={[styles.saveButton, { backgroundColor: colors.accent }]}
-              onPress={handleSaveCode}
+              onPress={handleSavePin}
             >
               <Text
                 style={[
@@ -257,7 +259,7 @@ export const SettingsScreen = () => {
                   { color: preferences.darkMode ? "#0d1117" : "#ffffff" },
                 ]}
               >
-                Guardar
+                Guardar PIN
               </Text>
             </Pressable>
           </View>
@@ -269,7 +271,7 @@ export const SettingsScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: SPACING.md },
+  content: { padding: SPACING.md, paddingBottom: 80 },
   sectionTitle: {
     fontSize: TYPOGRAPHY.size.xs,
     fontWeight: TYPOGRAPHY.weight.bold,

@@ -102,7 +102,6 @@ export const HomeScreen = ({ navigation }: Props) => {
     return list;
   }, [routes, preferences.sortOrder, preferences.showOnlySaved, savedRoutes]);
 
-  // Ejecución de LayoutAnimation automática en base a filtros y mutaciones
   useLayoutEffect(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
   }, [

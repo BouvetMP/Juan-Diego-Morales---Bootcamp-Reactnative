@@ -55,7 +55,8 @@ export function LoginScreen() {
     >
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.TEXT }]}>
-          Cable Bogotá 🚠
+          BogoCable
+          Asociado Con TransMiCable
         </Text>
         <Text style={[styles.subtitle, { color: colors.SUBTEXT }]}>
           Ingresa para comprar pasajes rápidos y viajar sin filas

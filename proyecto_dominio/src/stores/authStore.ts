@@ -1,4 +1,3 @@
-// src/stores/authStore.ts
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -23,6 +22,7 @@ export interface AuthState {
   register: (data: RegisterSchemaType) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
+  rechargeSaldo: (amount: number) => void; // 👈 Acción de recarga
   setHydrated: (state: boolean) => void;
   clearError: () => void;
 }
@@ -39,6 +39,17 @@ export const useAuthStore = create<AuthState>()(
 
       setHydrated: (state: boolean) => set({ isHydrated: state }),
       clearError: () => set({ error: null }),
+
+      rechargeSaldo: (amount: number) => {
+        const currentUser = get().user;
+        if (currentUser) {
+          const updatedUser = {
+            ...currentUser,
+            saldo: (currentUser.saldo || 0) + amount,
+          };
+          set({ user: updatedUser });
+        }
+      },
 
       login: async (credentials: LoginSchemaType) => {
         set({ isLoading: true, error: null });

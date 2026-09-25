@@ -74,7 +74,7 @@ export function EditScreen(): React.JSX.Element {
     }
   }, [cableRoute, reset]);
 
-  const onSubmit = async (data: RouteFormData) => {
+    const onSubmit = async (data: RouteFormData) => {
     try {
       await mutateAsync({
         id: params.id,
@@ -83,7 +83,12 @@ export function EditScreen(): React.JSX.Element {
       Alert.alert(
         "¡Éxito!",
         "La ruta de TransMiCable fue actualizada correctamente.",
-        [{ text: "OK", onPress: () => navigation.goBack() }],
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.popToTop(), // 👈 Redirige directamente al listado principal (HomeScreen)
+          },
+        ],
       );
     } catch {
       Alert.alert(

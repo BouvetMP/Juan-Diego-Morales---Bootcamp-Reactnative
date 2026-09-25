@@ -84,11 +84,11 @@ export const TYPOGRAPHY = {
   size: {
     xs: 12,
     sm: 14,
-    base: 16, // ← agregar si falta
+    base: 16, 
     md: 16,
     lg: 18,
     xl: 20,
-    xxl: 24, // ← agregar si falta
+    xxl: 24, 
     title: 24,
     subtitle: 16,
     body: 14,

@@ -1,8 +1,10 @@
 # 🚡 Cable Bogotá — Sistema de Teleféricos
 
-Proyecto de dominio sobre el sistema de **teleféricos y cable aéreo de Bogotá**, desarrollado con **React Native** y **TypeScript**.
+Proyecto de dominio sobre el sistema de **teleféricos y cable aéreo de Bogotá (TransMiCable)**, desarrollado con **React Native** y **TypeScript**.
 
-La aplicación permite consultar rutas desde una API, buscar estaciones, administrar favoritos, crear y editar rutas mediante formularios validados.
+La aplicación permite consultar rutas desde una API, buscar estaciones, administrar favoritos, crear y editar rutas, gestionar sesión de pasajero (tarjeta TuLlave), preferencias de usuario y animaciones de interfaz.
+
+**Dominio:** Pasajero / Cliente del sistema TransMiCable.
 
 ---
 
@@ -11,74 +13,77 @@ La aplicación permite consultar rutas desde una API, buscar estaciones, adminis
 La aplicación cuenta con las siguientes funcionalidades:
 
 * 📍 Catálogo de rutas cargado desde una API.
-* 🔎 Búsqueda de rutas y estaciones.
-* ⭐ Sistema de favoritos.
+* 🔎 Búsqueda y filtrado de rutas y estaciones.
+* ⭐ Sistema de favoritos con badge en tiempo real.
 * 📄 Información detallada de cada ruta.
-* ➕ Creación de nuevas rutas mediante un formulario validado.
+* ➕ Creación de nuevas rutas mediante formularios validados.
 * ✏️ Edición de rutas existentes con precarga de datos.
-* ✅ Validación de formularios con Zod.
-* 🔄 Navegación mediante pestañas y pantallas.
-* 🗄️ Estado global con Zustand.
-* 🔴 Contador de favoritos en tiempo real.
-* 🌐 Consumo de API mediante Axios.
+* ✅ Validación de formularios con Zod + React Hook Form.
+* 🔄 Navegación mediante pestañas, stacks y pantallas tipadas.
+* 🗄️ Estado global con Zustand (favoritos, auth, preferencias).
+* 🌐 Consumo de API mediante Axios + interceptores.
 * ⚡ Gestión de datos con TanStack Query v5.
-* ⏳ Estados de carga, error y lista vacía.
+* ⏳ Estados de carga, error, offline y lista vacía.
 * 🔄 Actualización mediante pull-to-refresh.
-* 🔐 Navegación y parámetros tipados con TypeScript.
+* 🔐 Autenticación de pasajero (login / registro / tokens).
+* 💳 Credencial digital con tarjeta TuLlave.
+* 🌙 Modo oscuro / claro con preferencias persistidas.
+* 🎬 Animaciones de UI (entrada, spring, stagger, progress bar, LayoutAnimation).
+* 🔐 Navegación y parámetros tipados con TypeScript estricto.
 
 ---
 
 ## 🛠️ Tecnologías utilizadas
 
-* **React Native**
-* **Expo**
-* **TypeScript**
-* **React Navigation 7**
-* **Zustand**
-* **Axios**
+* **React Native** + **Expo**
+* **TypeScript** (strict)
+* **React Navigation 7** (Bottom Tabs + Native Stack)
+* **Zustand** + persistencia (`AsyncStorage`)
+* **Axios** (cliente + interceptores 401 / refresh)
 * **TanStack Query v5**
-* **React Hook Form**
-* **Zod**
-* **Ionicons**
+* **React Hook Form** + **Zod** + `@hookform/resolvers`
+* **Expo SecureStore** (tokens en dispositivo nativo)
+* **Ionicons** (`@expo/vector-icons`)
+* **Animated API** de React Native (`useNativeDriver`, spring, stagger, interpolate, LayoutAnimation)
 * **FlatList**
 
 ---
 
 ## 📦 Instalación
 
-### 1. Instalar React Navigation e iconos
+### 1. Dependencias de navegación e iconos
 
 ```bash
 npx expo install @react-navigation/native @react-navigation/bottom-tabs @react-navigation/native-stack react-native-screens react-native-safe-area-context @expo/vector-icons
 ```
 
-### 2. Instalar Zustand
+### 2. Estado global y almacenamiento
 
 ```bash
-npx expo install zustand
+npx expo install zustand @react-native-async-storage/async-storage expo-secure-store
 ```
 
-### 3. Instalar Axios y TanStack Query
+### 3. Networking y caché
 
 ```bash
 npx expo install axios @tanstack/react-query
 ```
 
-### 4. Instalar React Hook Form + Zod
+### 4. Formularios y validación
 
 ```bash
 npx expo install react-hook-form zod @hookform/resolvers
 ```
 
-### 5. Instalar las dependencias del proyecto
-
-Con pnpm:
+### 5. Dependencias del proyecto
 
 ```bash
 pnpm install
+# o
+npm install
 ```
 
-Y con pnpm:
+Soporte web (opcional):
 
 ```bash
 npx expo install react-dom react-native-web
@@ -88,19 +93,15 @@ npx expo install react-dom react-native-web
 
 ## ▶️ Ejecutar el proyecto
 
-Inicia el servidor de desarrollo:
-
 ```bash
 npx expo start -c
 ```
 
-Después puedes:
+* `a` → Android  
+* `i` → iOS  
+* Escanear QR con Expo Go  
 
-* Presionar `a` para Android.
-* Presionar `i` para iOS.
-* Escanear el código QR con Expo Go.
-
-Para verificar la salud del proyecto:
+Verificación de tipos:
 
 ```bash
 npx tsc --noEmit
@@ -112,238 +113,207 @@ npx tsc --noEmit
 
 ### Semana 01 — Maquetación
 
-Se creó la estructura inicial del proyecto.
-
-* Definición del dominio de teleféricos.
-* Creación del componente reutilizable `ItemCard`.
-* Creación de la interfaz TypeScript `CableCarRoute`.
+* Definición del dominio de teleféricos / TransMiCable.
+* Componente reutilizable `ItemCard`.
+* Interfaz TypeScript `CableCarRoute`.
 
 ### Semana 02 — Listas, búsqueda y tema
 
-Se implementaron las funciones básicas para mostrar y buscar rutas.
-
-* Implementación de `FlatList`.
-* Buscador mediante `TextInput`.
+* `FlatList`, buscador con `TextInput` y `useMemo`.
 * Búsqueda por nombre, línea y estaciones.
-* Uso de `useMemo`.
-* Manejo del teclado con `KeyboardAvoidingView`.
-* Uso de `Pressable`.
-* Creación de un sistema de temas.
-* Estado vacío cuando no existen resultados.
+* `KeyboardAvoidingView`, `Pressable`.
+* Sistema de temas centralizado.
+* Empty state.
 
 ### Semana 03 — Navegación
 
-Se implementó la navegación utilizando React Navigation 7.
-
-* Bottom Tab Navigator con:
-  * 🗺️ Rutas.
-  * ⭐ Favoritos.
-* Native Stack Navigator para las rutas.
-* Navegación entre:
-  * `HomeList`
-  * `HomeDetail`
-  * `CreateRoute`
-* Uso de `route.params`.
-* Parámetros tipados mediante:
-  * `HomeStackParamList`
-  * `RootTabParamList`
-* Integración de Ionicons.
-* Creación de la pantalla de detalle.
+* Bottom Tab Navigator (Rutas / Favoritos).
+* Native Stack (`HomeList`, `HomeDetail`, `CreateRoute`).
+* Parámetros tipados: `HomeStackParamList`, `RootTabParamList`.
+* Ionicons + pantalla de detalle.
 
 ### Semana 04 — Estado global con Zustand
 
-Se implementó el sistema de favoritos mediante Zustand.
-
-* Creación del store `useSavedStore`.
-* Ubicación en `src/stores/savedStore.ts`.
-* Acciones:
-  * `addRoute`
-  * `removeRoute`
-  * `toggleRoute`
-  * `clearAll`
-  * `isSaved`
-* Uso de selectores específicos.
-* Botón Guardar / Quitar de favoritos.
-* `FavoritesScreen` conectado al estado global.
-* Badge con el número de favoritos.
-* Opción Limpiar todo.
-* Eliminación del prop drilling.
-* TypeScript estricto sin `any`.
+* Store `useSavedStore` (`addRoute`, `removeRoute`, `toggleRoute`, `clearAll`, `isSaved`).
+* `FavoritesScreen` + badge de favoritos.
+* Eliminación de prop drilling.
 
 ### Semana 05 — Networking
 
-Se incorporó el consumo de una API utilizando Axios y TanStack Query v5.
-
-* Creación de un cliente Axios centralizado.
-* Creación de mappers para convertir los datos de la API al modelo `CableCarRoute`.
-* Creación de hooks para:
-  * Consultar todas las rutas.
-  * Consultar una ruta por ID.
-  * Crear nuevas rutas.
-* Configuración de `QueryClientProvider`.
-* Manejo de estados:
-  * ⏳ Loading.
-  * ❌ Error.
-  * 📭 Empty state.
-  * 🔄 Pull-to-refresh.
-* Creación de rutas mediante POST.
-* Actualización de la caché después de crear una ruta.
-* Uso de JSONPlaceholder como API de práctica.
-* Integración de los datos de red con el dominio de Cable Bogotá.
+* Cliente Axios + mappers → `CableCarRoute`.
+* Hooks: `useRoutes`, `useRouteById`, `useCreateRoute`.
+* `QueryClientProvider`, loading / error / empty / pull-to-refresh.
+* POST de rutas y actualización de caché (JSONPlaceholder).
 
 ### Semana 06 — Formularios con React Hook Form + Zod
 
-Se implementaron formularios robustos con validación estricta y edición de rutas existentes.
+* Schema `routeSchema` con reglas del dominio.
+* Componente reutilizable `FormField`.
+* `CreateScreen` migrado a `useForm` + `zodResolver`.
+* Nueva `EditScreen` con precarga (`reset`) y `useUpdateRoute` (PUT + caché).
+* Botón “Editar esta ruta” en el detalle.
 
-* Instalación de `react-hook-form`, `zod` y `@hookform/resolvers`.
-* Creación del schema Zod `routeSchema` con validaciones coherentes al dominio:
-  * Nombre mínimo 3 caracteres.
-  * Línea obligatoria.
-  * Estaciones origen y destino requeridas.
-  * Duración mayor a 0.
-  * Precio no negativo.
-  * Descripción mínima de 5 caracteres.
-* Componente reutilizable `FormField` con:
-  * Controller de React Hook Form.
-  * Mensajes de error debajo de cada campo.
-  * Manejo automático de valores numéricos.
-  * Bordes rojos cuando hay error.
-* Refactorización de `CreateScreen`:
-  * Migración de `useState` manual a `useForm`.
-  * Uso de `zodResolver`.
-  * Estado `isSubmitting` para botones con spinner.
-* Nueva pantalla `EditScreen`:
-  * Carga de datos existentes con `useRouteById`.
-  * Precarga automática de valores mediante `reset()` en `useEffect`.
-  * Redirección automática tras guardar cambios.
-* Nuevo hook `useUpdateRoute`:
-  * Realiza PUT a la API.
-  * Actualiza la caché de TanStack Query en tiempo real.
-* `DetailScreen` conectado a la caché de TanStack Query:
-  * Los datos se actualizan en vivo al editar.
-  * Título del header cambia dinámicamente.
-* Nuevo tipo `UpdateRoutePayload`.
-* Botón Editar esta ruta en el detalle.
+### Semana 07 — Preferencias globales y tema dinámico
+
+* Store `usePreferences` (modo oscuro, ordenamiento, filtros de rutas populares / solo favoritos).
+* Persistencia con `zustand/persist` + `AsyncStorage`.
+* Tema inyectado en pantallas con `getColors(preferences.darkMode)`.
+* `HomeScreen` reacciona en tiempo real a filtros y favoritos guardados.
+* `loadInit` hidrata el store de preferencias al montar pantallas clave.
+
+### Semana 08 — Autenticación, seguridad y perfil de pasajero
+
+* Schemas Zod de auth (`authSchema`): login y registro.
+  * Tarjeta **TuLlave**: 16 dígitos numéricos.
+  * Contraseña segura: mínimo 12 caracteres, mayúscula, minúscula y carácter especial.
+* Store `authStore` (sesión híbrida local + DummyJSON).
+* `tokenService` con **SecureStore** (nativo) y fallback a `AsyncStorage` (web).
+* Interceptor Axios: ante `401` renueva token en `/auth/refresh` y reintenta la petición.
+* Flujo de navegación condicional: `AuthNavigator` (Login / Register) vs app autenticada.
+* `ProfileScreen`: credencial digital del pasajero (nombre, username, badge, TuLlave completa, saldo).
+* Tabs de **Perfil** y **Ajustes**.
+
+### Semana 09 — Animaciones, tipado estricto y pulido de UX
+
+* **Animaciones de presentación (UI):**
+  1. Fade-in + slide-up en `DetailScreen` (`Animated.parallel`, 500 ms, `useNativeDriver: true`).
+  2. Feedback táctil spring scale en cards (`AnimatedCard`, 1 → 0.95 → 1).
+  3. `ProgressBar` con `interpolate` de ancho (`0%→100%`) y color (rojo → amarillo → verde); `useNativeDriver: false` justificado para `width`/`backgroundColor`.
+  4. Entrada en cascada en `HomeScreen` (`StaggerItem`, delay `index * 80`).
+  5. `LayoutAnimation` al filtrar / agregar / quitar ítems visibles.
+* Componentes nuevos: `AnimatedCard.tsx`, `ProgressBar.tsx` (sin romper `ItemCard`).
+* Tipado estricto: `npx tsc --noEmit` en verde; interfaces centralizadas en `src/types`.
+* Safe unwrap de datos de React Query en detalle/edición.
+* Navegación anidada corregida desde Favoritos hacia `HomeDetail`.
+* `FormField` 100 % dinámico al tema (modo claro / oscuro).
+* `paddingBottom` en scrolls para no tapar contenido con el Tab Bar.
+* Exportaciones nombradas + default en pantallas para evitar crashes del navigator.
 
 ---
 
 ## 🧭 Navegación
 
-La aplicación utiliza un Bottom Tab Navigator como navegación principal y un Native Stack Navigator para las pantallas relacionadas con las rutas.
+```
+RootNavigator
+│
+├── [No autenticado] AuthStack
+│   ├── Login
+│   └── Register
+│
+└── [Autenticado] Bottom Tab Navigator
+    │
+    ├── 🗺️ Rutas (Home)
+    │   └── HomeStack
+    │       ├── HomeList          → lista + filtros + stagger + pull-to-refresh
+    │       ├── HomeDetail        → detalle animado + favoritos + ProgressBar + editar
+    │       ├── CreateRoute       → formulario RHF + Zod
+    │       └── EditRoute         → formulario con precarga + tema dinámico
+    │
+    ├── ⭐ Favoritos
+    │   └── FavoritesScreen       → lista de guardados + navegación anidada a detalle
+    │
+    ├── 👤 Perfil
+    │   └── ProfileScreen         → credencial TuLlave + datos del pasajero + logout
+    │
+    └── ⚙️ Ajustes
+        └── SettingsScreen        → dark mode, orden, filtros (preferencias Zustand)
+```
+
+### Tipos de navegación
 
 ```
-Bottom Tab Navigator
-│
-├── 🗺️ Rutas
-│   │
-│   └── Stack Navigator
-│       │
-│       ├── HomeList
-│       │   └── Lista + búsqueda + pull-to-refresh
-│       │
-│       ├── HomeDetail
-│       │   └── Detalle + favoritos + editar
-│       │
-│       ├── CreateRoute
-│       │   └── Formulario RHF + Zod para crear
-│       │
-│       └── EditRoute
-│           └── Formulario RHF + Zod para editar
-│
-└── ⭐ Favoritos
-    │
-    └── FavoritesScreen
-        └── Lista de favoritos + badge
+AuthStackParamList
+HomeStackParamList   (HomeList | HomeDetail | CreateRoute | EditRoute)
+RootTabParamList     (Home | Favorites | Profile | Settings)
+```
+
+La tab `Home` tipa su stack anidado con `NavigatorScreenParams<HomeStackParamList>` para permitir:
+
+```ts
+navigation.navigate("Home", { screen: "HomeDetail", params: item });
 ```
 
 ---
 
 ## 🌐 Consumo de API
 
-La comunicación con la API está organizada en dos partes principales:
-
 ```
 src/service/
-│
-├── api.ts
-│   └── Cliente Axios
-│
-└── mappers.ts
-    └── Convierte datos de la API
-        al modelo CableCarRoute
+├── api.ts           → cliente Axios + interceptores (Bearer + refresh 401)
+├── authService.ts   → login / refresh (DummyJSON)
+├── tokenService.ts  → SecureStore / AsyncStorage
+└── mappers.ts       → posts API → CableCarRoute
 ```
 
-Los hooks de TanStack Query se encuentran en:
+Hooks TanStack Query:
 
 ```
-src/hooks/
-└── useRoutes.ts
-    ├── useRoutes()       → lista de rutas
-    ├── useRouteById()    → ruta individual
-    ├── useCreateRoute()  → crear POST
-    └── useUpdateRoute()  → actualizar PUT
+src/hooks/useRoutes.ts
+├── useRoutes()        → lista
+├── useRouteById()     → detalle
+├── useCreateRoute()   → POST
+└── useUpdateRoute()   → PUT (ids ≤ 100 al mock; ids locales solo en caché)
 ```
 
 ### Flujo de datos
 
 ```
-API
- ↓
-Axios
- ↓
-Mappers
- ↓
-CableCarRoute
- ↓
-TanStack Query
- ↓
-Pantallas
+API (JSONPlaceholder / DummyJSON)
+        ↓
+     Axios (+ token + refresh)
+        ↓
+     Mappers
+        ↓
+  CableCarRoute / User
+        ↓
+  TanStack Query + Zustand
+        ↓
+     Pantallas
 ```
+
+> **Nota de dominio:** las rutas creadas en sesión usan `id = Date.now()` (> 100). El `PUT` real solo se envía para ids del seed (1–100); el resto se actualiza en caché local de React Query.
 
 ---
 
-## 📝 Formularios y Validación
-
-Los formularios utilizan React Hook Form con validación mediante Zod:
+## 📝 Formularios y validación
 
 ```
 src/schemas/
-└── routeSchema.ts
-    └── Reglas de validación
+├── routeSchema.ts   → creación / edición de rutas
+└── authSchema.ts    → login / registro (TuLlave, password fuerte)
 
 src/components/
-└── FormField.tsx
-    └── Input genérico + Controller + errores
+└── FormField.tsx    → Controller + errores + tema dinámico (getColors)
 ```
 
-El componente `FormField` es reutilizado en:
-
-* `CreateScreen` — creación de rutas.
-* `EditScreen` — edición de rutas existentes.
+Usado en: `CreateScreen`, `EditScreen`, `LoginScreen`, `RegisterScreen`.
 
 ---
 
 ## 🗄️ Estado global con Zustand
 
-Los favoritos se administran mediante:
+| Store | Archivo | Responsabilidad |
+|-------|---------|-----------------|
+| Favoritos | `src/stores/savedStore.ts` | `savedRoutes`, `toggleRoute`, `isSaved`, badge |
+| Auth | `src/stores/authStore.ts` | sesión, `login` / `register` / `logout`, `checkAuthStatus`, usuarios locales |
+| Preferencias | `src/hooks/usePreferences.ts` | dark mode, sort, showOnlySaved, showPopular, `loadInit` |
 
-```
-src/stores/savedStore.ts
-```
+Persistencia:
 
-El store contiene:
+* Auth y preferencias → `zustand/persist` + `AsyncStorage`.
+* Tokens → `expo-secure-store` (nativo) / `AsyncStorage` (web).
 
-```
-savedRoutes[]
-│
-├── addRoute()     → agregar favorito
-├── removeRoute()  → eliminar favorito
-├── toggleRoute()  → guardar o quitar
-├── clearAll()     → eliminar todos
-└── isSaved()      → comprobar si está guardado
-```
+---
 
-El badge de la pestaña Favoritos utiliza `savedRoutes.length` para mostrar la cantidad de rutas guardadas.
+## 🎬 Animaciones (Semana 09)
+
+| Animación | Dónde | Técnica |
+|-----------|--------|---------|
+| Fade + slide up | `DetailScreen` | `Animated.parallel` + `useNativeDriver: true` |
+| Spring scale al tocar | `AnimatedCard` → `ItemCard` | `Animated.spring` (1 ↔ 0.95) |
+| Barra de ocupación | `ProgressBar` en detalle | `interpolate` width + color (`useNativeDriver: false` justificado) |
+| Cascada de lista | `HomeScreen` (`StaggerItem`) | timing + delay `index * 80` |
+| Entrada/salida de ítems | filtros / favoritos en Home | `LayoutAnimation.Presets.easeInEaseOut` |
 
 ---
 
@@ -359,89 +329,128 @@ proyecto_dominio/
 ├── README.md
 │
 └── src/
-    │
     ├── navigation/
-    │   ├── RootNavigator.tsx
-    │   └── types.ts
+    │   ├── RootNavigator.tsx      → Auth vs Tabs + hidratación
+    │   └── types.ts               → Auth / Home / RootTab param lists
     │
     ├── screens/
-    │   ├── HomeScreen.tsx
-    │   ├── DetailScreen.tsx
+    │   ├── HomeScreen.tsx         → lista + stagger + LayoutAnimation
+    │   ├── DetailScreen.tsx       → fade/slide + ProgressBar + favoritos
     │   ├── CreateScreen.tsx
     │   ├── EditScreen.tsx
-    │   └── FavoritesScreen.tsx
+    │   ├── FavoritesScreen.tsx    → navegación anidada a HomeDetail
+    │   ├── SettingsScreen.tsx
+    │   ├── ProfileScreen.tsx
+    │   ├── LoginScreen.tsx
+    │   └── RegisterScreen.tsx
     │
     ├── stores/
-    │   └── savedStore.ts
+    │   ├── savedStore.ts
+    │   └── authStore.ts
     │
     ├── hooks/
-    │   └── useRoutes.ts
+    │   ├── useRoutes.ts
+    │   └── usePreferences.ts
     │
     ├── service/
     │   ├── api.ts
+    │   ├── authService.ts
+    │   ├── tokenService.ts
     │   └── mappers.ts
     │
     ├── schemas/
-    │   └── routeSchema.ts
+    │   ├── routeSchema.ts
+    │   └── authSchema.ts
     │
     ├── components/
-    │   ├── ItemCard.tsx
-    │   └── FormField.tsx
+    │   ├── ItemCard.tsx           → usa AnimatedCard internamente
+    │   ├── AnimatedCard.tsx       → spring scale
+    │   ├── ProgressBar.tsx        → interpolate width + color
+    │   └── FormField.tsx          → tema dinámico
     │
     ├── theme/
-    │   └── index.ts
+    │   └── index.ts               → getColors(isDark), TYPOGRAPHY, SPACING, RADIUS
+    │
+    ├── storage/                   → helpers de preferencias (si aplica)
     │
     └── types/
-        └── index.tsx
+        └── index.tsx              → CableCarRoute, User, AuthTokens, payloads
 ```
 
-### 📂 Descripción de carpetas
+### Descripción de carpetas
 
-| Carpeta      | Descripción                                                |
-|--------------|-------------------------------------------------------------|
-| `navigation` | Configuración de Tabs, Stack y tipos de navegación          |
-| `screens`    | Pantallas principales de la aplicación                      |
-| `stores`     | Estado global de favoritos con Zustand                      |
-| `hooks`      | Hooks para consultar y modificar datos con TanStack Query   |
-| `service`    | Cliente Axios y transformación de datos                     |
-| `schemas`    | Reglas de validación con Zod                                 |
-| `components` | Componentes reutilizables                                   |
-| `theme`      | Colores, tipografía, espacios y estilos                     |
-| `types`      | Interfaces y tipos de TypeScript                             |
+| Carpeta | Descripción |
+|---------|-------------|
+| `navigation` | Tabs, stacks, auth gate y tipos de rutas |
+| `screens` | Pantallas de la app (rutas, auth, perfil, ajustes) |
+| `stores` | Zustand: favoritos y autenticación |
+| `hooks` | React Query + preferencias |
+| `service` | Axios, auth, tokens y mappers |
+| `schemas` | Validaciones Zod (rutas y auth) |
+| `components` | UI reutilizable + animaciones |
+| `theme` | Colores dinámicos, tipografía y espaciado |
+| `types` | Contratos TypeScript del dominio |
 
 ---
 
 ## 🚡 Modelo de una ruta
 
-Cada objeto `CableCarRoute` contiene información como:
+```ts
+interface CableCarRoute {
+  id: string;
+  name: string;
+  route: string;                 // código / línea
+  originStation: string;
+  destinationStation: string;
+  duration: number;              // minutos
+  ticketPrice: number;           // COP
+  subtitle: string;
+  imageUrl?: string;
+}
+```
 
-* `id` — identificador de la ruta.
-* `name` — nombre de la ruta.
-* `route` — línea.
-* `originStation` — estación de origen.
-* `destinationStation` — estación de destino.
-* `duration` — duración en minutos.
-* `ticketPrice` — tarifa en COP.
-* `subtitle` — descripción breve.
-* `Imagen` — imagen utilizada en la interfaz.
+Datos seed alineados al dominio de **cables aéreos urbanos de Bogotá** (cerros, portales TransMilenio e interior de ciudad), con duraciones y tarifas coherentes al modo teleférico.
 
 ---
 
 ## ⭐ Funcionalidades principales
 
-| Funcionalidad       | Descripción                                                          |
-|---------------------|------------------------------------------------------------------------|
-| Rutas               | Consulta las rutas desde la API mediante TanStack Query.               |
-| Búsqueda            | Filtra las rutas por nombre, línea o estaciones.                       |
-| Pull-to-refresh     | Permite actualizar manualmente los datos.                              |
-| Loading             | Muestra un indicador mientras se cargan los datos.                     |
-| Error               | Muestra un mensaje y permite reintentar la consulta.                   |
-| Empty state         | Informa cuando no existen resultados.                                  |
-| Crear ruta          | Formulario validado con RHF + Zod.                                     |
-| Editar ruta         | Formulario con precarga y actualización en tiempo real.                |
-| Detalle             | Muestra toda la información sincronizada con la caché.                 |
-| Favoritos           | Guarda rutas mediante Zustand.                                         |
-| Badge               | Muestra la cantidad de favoritos en tiempo real.                       |
-| Limpiar favoritos   | Elimina todas las rutas guardadas.                                     |
-| Navegación          | Utiliza Tabs y Stack con parámetros tipados.                           |
-| Tema                | Mantiene los estilos centralizados.                                    |
+| Funcionalidad | Descripción |
+|---------------|-------------|
+| Rutas | Consulta vía TanStack Query + mappers al dominio Cable Bogotá |
+| Búsqueda / filtros | Nombre, línea, estaciones; solo favoritos; populares; ordenamiento |
+| Pull-to-refresh | Refresco manual de la lista |
+| Loading / Error / Empty | Estados de red y de lista vacía |
+| Offline banner | Aviso cuando se sirven datos de caché |
+| Crear / Editar ruta | Formularios RHF + Zod; PUT condicionado por id |
+| Detalle | Info completa, favoritos, edición, animación de entrada, ProgressBar de ocupación estimada |
+| Favoritos | Zustand + badge en tab |
+| Auth | Login / registro, TuLlave, tokens seguros, refresh 401 |
+| Perfil | Credencial digital del pasajero |
+| Preferencias | Dark mode, orden, filtros persistidos |
+| Animaciones | Spring en cards, stagger en lista, fade/slide en detalle, progress interpolado, LayoutAnimation |
+| Tema | `getColors` en toda la UI (sin hardcode de contraste) |
+| Tipado | TypeScript estricto, param lists y stores tipados |
+
+---
+
+## 📊 Estado del proyecto
+
+Al cerrar la **Semana 09** la app se encuentra en un estado robusto:
+
+* ✅ `npx tsc --noEmit` sin errores.
+* ✅ Formularios a prueba de fallos (Zod) en rutas y auth.
+* ✅ Navegación tipada y resiliente (incl. Favoritos → detalle).
+* ✅ Sesión de pasajero con tokens y refresh.
+* ✅ Tema claro / oscuro consistente (incl. `FormField`).
+* ✅ Animaciones de UI con `useNativeDriver: true` salvo el caso justificado de `width` en `ProgressBar`.
+* ✅ Experiencia centrada en el **Pasajero / Cliente** de TransMiCable y tarjeta TuLlave.
+
+---
+
+## ▶️ Scripts útiles
+
+```bash
+npx expo start -c      # desarrollo
+npx tsc --noEmit       # chequeo de tipos
+```

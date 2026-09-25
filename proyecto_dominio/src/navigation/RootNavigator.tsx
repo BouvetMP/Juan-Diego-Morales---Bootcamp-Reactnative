@@ -65,7 +65,7 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="HomeList"
         component={HomeScreen}
-        options={{ title: "🚡 Cable Bogotá" }}
+        options={{ title: "BogoCable" }}
       />
       <HomeStack.Screen
         name="HomeDetail"
