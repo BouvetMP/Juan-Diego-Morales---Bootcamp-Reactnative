@@ -27,16 +27,13 @@ export function DetailScreen(): React.JSX.Element {
   const navigation = useNavigation<DetailNavProp>();
   const params = route.params;
 
-  // 📡 Leemos la información viva desde la caché de TanStack Query
   const { data: cachedRoute } = useRouteById(params.id);
 
-  // Si hay datos actualizados en caché, los usamos; si no, usamos los parámetros de navegación
   const cableRoute = cachedRoute ?? params;
 
   const isSaved = useSavedStore((s) => s.isSaved(cableRoute.id));
   const toggleRoute = useSavedStore((s) => s.toggleRoute);
 
-  // 🔄 Actualiza el título del header dinámicamente si el nombre cambia
   useEffect(() => {
     navigation.setOptions({ title: cableRoute.name });
   }, [navigation, cableRoute.name]);

@@ -1,251 +1,187 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useMemo, useEffect } from "react";
 import {
   View,
   Text,
   FlatList,
-  TextInput,
   StyleSheet,
-  Platform,
   ActivityIndicator,
   Pressable,
-  ListRenderItem,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+} from "react-native";
+import { useRoutes } from "../hooks/useRoutes";
+import { usePreferences } from "../hooks/usePreferences";
+import { useSavedStore } from "../stores/savedStore";
+import ItemCard from "../components/ItemCard";
+import { getColors, TYPOGRAPHY, SPACING, RADIUS } from "../theme";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { HomeStackParamList } from "../navigation/types";
+import { CableCarRoute } from "../types/index";
 
-import ItemCard from '../components/ItemCard';
-import { useRoutes } from '../hooks/useRoutes';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../theme';
-import type { CableCarRoute } from '../types';
-import type { HomeStackParamList } from '../navigation/types';
+type Props = NativeStackScreenProps<HomeStackParamList, "HomeList">;
 
-type HomeNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeList'>;
+export const HomeScreen = ({ navigation }: Props) => {
+  const {
+    data: routes,
+    isLoading,
+    isError,
+    refetch,
+    isOfflineData,
+  } = useRoutes();
+  const { preferences, loadInit } = usePreferences();
+  const savedRoutes = useSavedStore((state) => state.savedRoutes);
+  const colors = getColors(preferences.darkMode);
 
-export function HomeScreen(): React.JSX.Element {
-  const navigation = useNavigation<HomeNavigationProp>();
-  const [query, setQuery] = useState('');
+  useEffect(() => {
+    loadInit();
+  }, [loadInit]);
 
-  const { data, isLoading, isError, error, refetch, isFetching } = useRoutes();
+  const filteredAndSortedRoutes = useMemo(() => {
+    if (!routes) return [];
+    let list = [...routes];
 
-  const routes = data ?? [];
+    if (preferences.showOnlySaved) {
+      list = list.filter((route) =>
+        savedRoutes.some((saved) => saved.id === route.id),
+      );
+    }
 
-  const filteredRoutes = useMemo(() => {
-    const trimmed = query.trim().toLowerCase();
-    if (!trimmed) return routes;
-    return routes.filter(
-      (route) =>
-        route.name.toLowerCase().includes(trimmed) ||
-        route.route.toLowerCase().includes(trimmed) ||
-        route.originStation.toLowerCase().includes(trimmed) ||
-        route.destinationStation.toLowerCase().includes(trimmed) ||
-        route.subtitle.toLowerCase().includes(trimmed)
-    );
-  }, [query, routes]);
+    if (preferences.sortOrder === "name") {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (preferences.sortOrder === "duration") {
+      list.sort((a, b) => a.duration - b.duration);
+    } else if (preferences.sortOrder === "price") {
+      list.sort((a, b) => a.ticketPrice - b.ticketPrice);
+    }
 
-  const handleItemPress = useCallback(
-    (route: CableCarRoute) => {
-      navigation.navigate('HomeDetail', {
-        id: route.id,
-        name: route.name,
-        route: route.route,
-        originStation: route.originStation,
-        destinationStation: route.destinationStation,
-        duration: route.duration,
-        ticketPrice: route.ticketPrice,
-        subtitle: route.subtitle,
-      });
-    },
-    [navigation]
-  );
-
-  const renderItem: ListRenderItem<CableCarRoute> = useCallback(
-    ({ item }) => (
-      <ItemCard route={item} onPress={() => handleItemPress(item)} />
-    ),
-    [handleItemPress]
-  );
-
-  const renderEmpty = useCallback(() => {
-    if (isLoading) return null;
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyIcon}>🚡</Text>
-        <Text style={styles.emptyText}>
-          {query.trim()
-            ? `Sin resultados para "${query}"`
-            : 'No hay rutas disponibles'}
-        </Text>
-        <Text style={styles.emptySubText}>
-          {query.trim()
-            ? 'Prueba con otro portal o línea'
-            : 'Desliza hacia abajo para actualizar'}
-        </Text>
-      </View>
-    );
-  }, [query, isLoading]);
+    return list;
+  }, [routes, preferences.sortOrder, preferences.showOnlySaved, savedRoutes]);
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={COLORS.accent} />
-        <Text style={styles.loadingText}>Cargando rutas de cable...</Text>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
 
   if (isError) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.emptyIcon}>⚠️</Text>
-        <Text style={styles.emptyText}>No se pudieron cargar las rutas</Text>
-        <Text style={styles.emptySubText}>
-          {error?.message ?? 'Error de red'}
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.error }]}>
+          Error al cargar las rutas.
         </Text>
-        <Pressable style={styles.retryButton} onPress={() => refetch()}>
-          <Text style={styles.retryText}>Reintentar</Text>
+        <Pressable
+          style={[
+            styles.retryButton,
+            { borderColor: colors.accent, backgroundColor: colors.surface },
+          ]}
+          onPress={() => refetch()}
+        >
+          <Text
+            style={{
+              color: colors.accent,
+              fontWeight: TYPOGRAPHY.weight.semibold,
+            }}
+          >
+            Reintentar
+          </Text>
         </Pressable>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <Text style={styles.headerSubtitle}>Rutas desde la API</Text>
-          <Pressable
-            style={styles.createChip}
-            onPress={() => navigation.navigate('CreateRoute')}
-          >
-            <Text style={styles.createChipText}>+ Nueva</Text>
-          </Pressable>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {isOfflineData && (
+        <View
+          style={[styles.offlineBanner, { backgroundColor: colors.warning }]}
+        >
+          <Text style={styles.offlineText}>
+            ⚠️ Mostrando datos sin red (Caché local)
+          </Text>
         </View>
-
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar ruta, portal o estación..."
-          placeholderTextColor={COLORS.textSecondary}
-          value={query}
-          onChangeText={setQuery}
-          returnKeyType="search"
-          autoCapitalize="none"
-          autoCorrect={false}
-          clearButtonMode="while-editing"
-        />
-      </View>
+      )}
 
       <FlatList
-        data={filteredRoutes}
+        data={filteredAndSortedRoutes}
         keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        ListEmptyComponent={renderEmpty}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
         contentContainerStyle={styles.listContent}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        showsVerticalScrollIndicator={false}
-        // Pull-to-refresh
-        refreshing={isFetching && !isLoading}
-        onRefresh={refetch}
+        ListEmptyComponent={
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            No hay rutas que coincidan con los filtros de Ajustes.
+          </Text>
+        }
+        renderItem={({ item }: { item: CableCarRoute }) => {
+          const isPopular = preferences.showPopular && item.duration <= 15;
+          return (
+            <View>
+              {isPopular && (
+                <View
+                  style={[
+                    styles.popularBadge,
+                    {
+                      borderColor: colors.accent,
+                      backgroundColor: colors.accentDim,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.popularBadgeText, { color: colors.accent }]}
+                  >
+                    ⚡ RUTA POPULAR (EXPRÉS)
+                  </Text>
+                </View>
+              )}
+              <ItemCard
+                route={item}
+                onPress={() => navigation.navigate("HomeDetail", item)}
+              />
+            </View>
+          );
+        }}
       />
     </View>
   );
-}
+};
+
+export default HomeScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  centered: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: SPACING.xl,
-  },
-  loadingText: {
-    marginTop: SPACING.md,
-    color: COLORS.textSecondary,
-    fontSize: TYPOGRAPHY.size.sm,
-  },
-  header: {
-    paddingHorizontal: SPACING.base,
-    paddingTop: SPACING.sm,
-    paddingBottom: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.md,
-  },
-  headerSubtitle: {
-    fontSize: TYPOGRAPHY.size.sm,
-    color: COLORS.textSecondary,
-  },
-  createChip: {
-    backgroundColor: COLORS.accentDim,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.full,
-  },
-  createChipText: {
-    color: COLORS.accent,
-    fontWeight: TYPOGRAPHY.weight.bold,
-    fontSize: TYPOGRAPHY.size.sm,
-  },
-  searchInput: {
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.base,
-    paddingVertical: Platform.OS === 'ios' ? 12 : 10,
-    color: COLORS.textPrimary,
-    fontSize: TYPOGRAPHY.size.base,
-  },
-  listContent: {
-    padding: SPACING.base,
-    flexGrow: 1,
-  },
-  separator: {
-    height: SPACING.base,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: SPACING.xl,
-  },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: SPACING.sm,
-  },
-  emptyText: {
-    fontSize: TYPOGRAPHY.size.md,
-    fontWeight: TYPOGRAPHY.weight.semibold,
-    color: COLORS.textPrimary,
-    textAlign: 'center',
-    marginBottom: SPACING.xs,
-  },
-  emptySubText: {
-    fontSize: TYPOGRAPHY.size.sm,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-  },
+  container: { flex: 1 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  errorText: { fontSize: TYPOGRAPHY.size.md, marginBottom: SPACING.sm },
   retryButton: {
-    marginTop: SPACING.lg,
-    backgroundColor: COLORS.accent,
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.md,
-    borderRadius: RADIUS.full,
+    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.md,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
   },
-  retryText: {
-    color: COLORS.background,
+  offlineBanner: {
+    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.md,
+    alignItems: "center",
+  },
+  offlineText: {
+    color: "#ffffff",
     fontWeight: TYPOGRAPHY.weight.bold,
-    fontSize: TYPOGRAPHY.size.base,
+    fontSize: TYPOGRAPHY.size.xs,
+  },
+  listContent: { padding: SPACING.md },
+  emptyText: {
+    textAlign: "center",
+    marginTop: SPACING.md,
+    fontSize: TYPOGRAPHY.size.md,
+  },
+  popularBadge: {
+    borderWidth: 1,
+    borderRadius: RADIUS.sm,
+    paddingVertical: 2,
+    paddingHorizontal: SPACING.xs,
+    alignSelf: "flex-start",
+    marginBottom: 4,
+    marginTop: SPACING.xs,
+  },
+  popularBadgeText: {
+    fontSize: TYPOGRAPHY.size.xs,
+    fontWeight: TYPOGRAPHY.weight.bold,
   },
 });

@@ -7,25 +7,27 @@ import { HomeScreen } from "../screens/HomeScreen";
 import { DetailScreen } from "../screens/DetailScreen";
 import { CreateScreen } from "../screens/CreateScreen";
 import { FavoritesScreen } from "../screens/FavoritesScreen";
-import { COLORS } from "../theme";
+import { SettingsScreen } from "../screens/SettingsScreen";
+import { getColors } from "../theme";
 import type { HomeStackParamList, RootTabParamList } from "./types";
 import { useSavedStore } from "../stores/savedStore";
 import { EditScreen } from "../screens/EditScreen";
+import { usePreferences } from "../hooks/usePreferences";
 
-// ============================================
-// STACK INTERNO — Pestaña Rutas
-// ============================================
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 
 function HomeStackNavigator(): React.JSX.Element {
+  const { preferences } = usePreferences();
+  const colors = getColors(preferences.darkMode);
+
   return (
     <HomeStack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: COLORS.surface },
-        headerTintColor: COLORS.accent,
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.accent,
         headerTitleStyle: { fontWeight: "700" },
         headerShadowVisible: false,
-        contentStyle: { backgroundColor: COLORS.background },
+        contentStyle: { backgroundColor: colors.background },
       }}
     >
       <HomeStack.Screen
@@ -58,44 +60,33 @@ function HomeStackNavigator(): React.JSX.Element {
   );
 }
 
-// ============================================
-// TAB NAVIGATOR RAÍZ
-// ============================================
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 export function RootNavigator(): React.JSX.Element {
   const savedCount = useSavedStore((s) => s.savedRoutes.length);
+  const { preferences } = usePreferences();
+  const colors = getColors(preferences.darkMode);
 
   return (
     <Tab.Navigator
       detachInactiveScreens={false}
-      screenOptions={({
-        route,
-      }: {
-        route: { name: keyof RootTabParamList };
-      }) => ({
+      screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: COLORS.accent,
-        tabBarInactiveTintColor: COLORS.textSecondary,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: COLORS.surface,
-          borderTopColor: COLORS.border,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
         },
-        tabBarIcon: ({
-          focused,
-          color,
-          size,
-        }: {
-          focused: boolean;
-          color: string;
-          size: number;
-        }) => {
+        tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
 
           if (route.name === "Home") {
             iconName = focused ? "home" : "home-outline";
-          } else {
+          } else if (route.name === "Favorites") {
             iconName = focused ? "heart" : "heart-outline";
+          } else {
+            iconName = focused ? "settings" : "settings-outline";
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -114,15 +105,27 @@ export function RootNavigator(): React.JSX.Element {
           tabBarLabel: "Favoritos",
           headerShown: true,
           title: "Rutas Favoritas",
-          headerStyle: { backgroundColor: COLORS.surface },
-          headerTintColor: COLORS.accent,
+          headerStyle: { backgroundColor: colors.surface },
+          headerTintColor: colors.accent,
           headerTitleStyle: { fontWeight: "700" },
           tabBarBadge: savedCount > 0 ? savedCount : undefined,
           tabBarBadgeStyle: {
-            backgroundColor: COLORS.error,
+            backgroundColor: colors.error,
             fontSize: 11,
             fontWeight: "700",
           },
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          tabBarLabel: "Ajustes",
+          headerShown: true,
+          title: "Ajustes y Filtros",
+          headerStyle: { backgroundColor: colors.surface },
+          headerTintColor: colors.accent,
+          headerTitleStyle: { fontWeight: "700" },
         }}
       />
     </Tab.Navigator>
