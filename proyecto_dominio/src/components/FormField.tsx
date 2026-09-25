@@ -8,12 +8,11 @@ import {
   Platform,
 } from "react-native";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from "../theme";
+import { getColors, TYPOGRAPHY, SPACING, RADIUS } from "../theme";
+import { usePreferences } from "../hooks/usePreferences";
 
-interface FormFieldProps<T extends FieldValues> extends Omit<
-  TextInputProps,
-  "defaultValue"
-> {
+interface FormFieldProps<T extends FieldValues>
+  extends Omit<TextInputProps, "defaultValue"> {
   control: Control<T, any, any>;
   name: Path<T>;
   label: string;
@@ -29,9 +28,19 @@ export function FormField<T extends FieldValues>({
   keyboardType,
   ...textInputProps
 }: FormFieldProps<T>): React.JSX.Element {
+  const { preferences } = usePreferences();
+  const isDark = preferences?.darkMode ?? preferences?.isDarkMode ?? true;
+  const colors = getColors(isDark);
+
+  const errorColor = colors.error || colors.danger || "#ef4444";
+  const labelColor = colors.textSecondary || colors.subtext || "#8b949e";
+  const textColor = colors.textPrimary || colors.text || "#ffffff";
+  const inputBg = colors.surface || colors.surfaceAlt || "#161b22";
+  const borderColor = colors.border || "#30363d";
+
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
       <Controller
         control={control}
         name={name}
@@ -39,10 +48,14 @@ export function FormField<T extends FieldValues>({
           <TextInput
             style={[
               styles.input,
+              {
+                backgroundColor: inputBg,
+                borderColor: error ? errorColor : borderColor,
+                color: textColor,
+              },
               multiline && styles.inputMultiline,
-              error && styles.inputError,
             ]}
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={labelColor}
             onBlur={onBlur}
             onChangeText={(text) => {
               if (keyboardType === "numeric") {
@@ -59,7 +72,9 @@ export function FormField<T extends FieldValues>({
           />
         )}
       />
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && (
+        <Text style={[styles.errorText, { color: errorColor }]}>{error}</Text>
+      )}
     </View>
   );
 }
@@ -68,29 +83,21 @@ const styles = StyleSheet.create({
   field: { gap: SPACING.xs, marginBottom: SPACING.sm },
   label: {
     fontSize: TYPOGRAPHY.size.xs,
-    color: COLORS.textSecondary,
     textTransform: "uppercase",
     fontWeight: TYPOGRAPHY.weight.medium,
   },
   input: {
-    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
     borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.base,
     paddingVertical: Platform.OS === "ios" ? 12 : 10,
-    color: COLORS.textPrimary,
     fontSize: TYPOGRAPHY.size.base,
   },
   inputMultiline: {
     minHeight: 80,
     textAlignVertical: "top",
   },
-  inputError: {
-    borderColor: COLORS.error,
-  },
   errorText: {
-    color: COLORS.error,
     fontSize: TYPOGRAPHY.size.xs,
     marginTop: 2,
   },

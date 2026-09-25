@@ -20,7 +20,7 @@ import { routeSchema, RouteFormData } from "../schemas/routeSchema";
 import { FormField } from "../components/FormField";
 import { TYPOGRAPHY, SPACING, RADIUS, getColors } from "../theme";
 import type { HomeStackParamList } from "../navigation/types";
-import { usePreferences } from "../stores/usePreferences";
+import { usePreferences } from "../hooks/usePreferences";
 import type { CableCarRoute } from "../types";
 
 type EditNavProp = NativeStackNavigationProp<HomeStackParamList, "EditRoute">;
@@ -85,7 +85,7 @@ export function EditScreen(): React.JSX.Element {
         "La ruta de TransMiCable fue actualizada correctamente.",
         [{ text: "OK", onPress: () => navigation.goBack() }],
       );
-    } catch (error) {
+    } catch {
       Alert.alert(
         "Error",
         "No se pudo actualizar la ruta. Intente nuevamente.",

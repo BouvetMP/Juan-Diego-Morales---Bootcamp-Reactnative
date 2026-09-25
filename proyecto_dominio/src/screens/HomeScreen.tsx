@@ -20,14 +20,12 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { HomeStackParamList } from "../navigation/types";
 import { CableCarRoute } from "../types/index";
 
-// Habilitamos LayoutAnimation para dispositivos Android
 if (Platform.OS === "android") {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
 }
 
 type Props = NativeStackScreenProps<HomeStackParamList, "HomeList">;
 
-// Componente Wrapper para la Animación de Entrada en Cascada (Stagger)
 const StaggerItem = ({
   children,
   index,
