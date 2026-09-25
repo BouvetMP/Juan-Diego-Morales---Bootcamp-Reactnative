@@ -79,8 +79,6 @@ npx expo install react-hook-form zod @hookform/resolvers
 
 ```bash
 pnpm install
-# o
-npm install
 ```
 
 Soporte web (opcional):
