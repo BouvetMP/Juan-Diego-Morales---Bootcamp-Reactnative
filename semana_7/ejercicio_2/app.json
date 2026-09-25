@@ -1,0 +1,8 @@
+{
+  "android": {
+    "package": "com.anonymous.week07ejercicio02mmkvsecurestore"
+  },
+  "plugins": [
+    "expo-secure-store"
+  ]
+}
