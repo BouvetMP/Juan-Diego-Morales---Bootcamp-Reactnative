@@ -86,7 +86,7 @@ export function EditScreen(): React.JSX.Element {
         [
           {
             text: "OK",
-            onPress: () => navigation.popToTop(), // 👈 Redirige directamente al listado principal (HomeScreen)
+            onPress: () => navigation.popToTop(),
           },
         ],
       );

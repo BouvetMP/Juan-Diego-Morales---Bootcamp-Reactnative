@@ -100,7 +100,6 @@ export function ProfileScreen() {
         </View>
       </View>
 
-      {/* Tarjeta de Saldo y Recarga Rápida */}
       <View
         style={[
           styles.balanceCard,
@@ -137,7 +136,6 @@ export function ProfileScreen() {
         </Pressable>
       </View>
 
-      {/* Información del Pasajero */}
       <View
         style={[
           styles.infoCard,
@@ -188,7 +186,6 @@ export function ProfileScreen() {
         <Text style={styles.logoutText}>Cerrar Sesión</Text>
       </Pressable>
 
-      {/* Ventana Emergente (Modal) para Confirmar PIN de Recarga */}
       <Modal
         visible={modalVisible}
         transparent

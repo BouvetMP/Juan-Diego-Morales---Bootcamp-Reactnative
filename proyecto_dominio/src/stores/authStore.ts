@@ -22,7 +22,7 @@ export interface AuthState {
   register: (data: RegisterSchemaType) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
-  rechargeSaldo: (amount: number) => void; // 👈 Acción de recarga
+  rechargeSaldo: (amount: number) => void; 
   setHydrated: (state: boolean) => void;
   clearError: () => void;
 }
