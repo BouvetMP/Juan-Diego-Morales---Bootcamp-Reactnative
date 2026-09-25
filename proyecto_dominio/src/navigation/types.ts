@@ -16,4 +16,5 @@ export type HomeStackParamList = {
     subtitle: string;
   };
   CreateRoute: undefined;
+  EditRoute: { id: string };
 };

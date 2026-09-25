@@ -1,15 +1,16 @@
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
+import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
 
-import { HomeScreen } from '../screens/HomeScreen';
-import { DetailScreen } from '../screens/DetailScreen';
-import { CreateScreen } from '../screens/CreateScreen';
-import { FavoritesScreen } from '../screens/FavoritesScreen';
-import { COLORS } from '../theme';
-import type { HomeStackParamList, RootTabParamList } from './types';
-import { useSavedStore } from '../stores/savedStore';
+import { HomeScreen } from "../screens/HomeScreen";
+import { DetailScreen } from "../screens/DetailScreen";
+import { CreateScreen } from "../screens/CreateScreen";
+import { FavoritesScreen } from "../screens/FavoritesScreen";
+import { COLORS } from "../theme";
+import type { HomeStackParamList, RootTabParamList } from "./types";
+import { useSavedStore } from "../stores/savedStore";
+import { EditScreen } from "../screens/EditScreen";
 
 // ============================================
 // STACK INTERNO — Pestaña Rutas
@@ -22,7 +23,7 @@ function HomeStackNavigator(): React.JSX.Element {
       screenOptions={{
         headerStyle: { backgroundColor: COLORS.surface },
         headerTintColor: COLORS.accent,
-        headerTitleStyle: { fontWeight: '700' },
+        headerTitleStyle: { fontWeight: "700" },
         headerShadowVisible: false,
         contentStyle: { backgroundColor: COLORS.background },
       }}
@@ -30,19 +31,28 @@ function HomeStackNavigator(): React.JSX.Element {
       <HomeStack.Screen
         name="HomeList"
         component={HomeScreen}
-        options={{ title: '🚡 Cable Bogotá' }}
+        options={{ title: "🚡 Cable Bogotá" }}
       />
       <HomeStack.Screen
         name="HomeDetail"
         component={DetailScreen}
-        options={({ route }: { route: { params: HomeStackParamList['HomeDetail'] } }) => ({
+        options={({
+          route,
+        }: {
+          route: { params: HomeStackParamList["HomeDetail"] };
+        }) => ({
           title: route.params.name,
         })}
       />
       <HomeStack.Screen
         name="CreateRoute"
         component={CreateScreen}
-        options={{ title: 'Nueva Ruta' }}
+        options={{ title: "Nueva Ruta" }}
+      />
+      <HomeStack.Screen
+        name="EditRoute"
+        component={EditScreen}
+        options={{ title: "Editar Ruta" }}
       />
     </HomeStack.Navigator>
   );
@@ -59,7 +69,11 @@ export function RootNavigator(): React.JSX.Element {
   return (
     <Tab.Navigator
       detachInactiveScreens={false}
-      screenOptions={({ route }: { route: { name: keyof RootTabParamList } }) => ({
+      screenOptions={({
+        route,
+      }: {
+        route: { name: keyof RootTabParamList };
+      }) => ({
         headerShown: false,
         tabBarActiveTintColor: COLORS.accent,
         tabBarInactiveTintColor: COLORS.textSecondary,
@@ -67,13 +81,21 @@ export function RootNavigator(): React.JSX.Element {
           backgroundColor: COLORS.surface,
           borderTopColor: COLORS.border,
         },
-        tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => {
+        tabBarIcon: ({
+          focused,
+          color,
+          size,
+        }: {
+          focused: boolean;
+          color: string;
+          size: number;
+        }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
 
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
+          if (route.name === "Home") {
+            iconName = focused ? "home" : "home-outline";
           } else {
-            iconName = focused ? 'heart' : 'heart-outline';
+            iconName = focused ? "heart" : "heart-outline";
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -83,23 +105,23 @@ export function RootNavigator(): React.JSX.Element {
       <Tab.Screen
         name="Home"
         component={HomeStackNavigator}
-        options={{ tabBarLabel: 'Rutas' }}
+        options={{ tabBarLabel: "Rutas" }}
       />
       <Tab.Screen
         name="Favorites"
         component={FavoritesScreen}
         options={{
-          tabBarLabel: 'Favoritos',
+          tabBarLabel: "Favoritos",
           headerShown: true,
-          title: 'Rutas Favoritas',
+          title: "Rutas Favoritas",
           headerStyle: { backgroundColor: COLORS.surface },
           headerTintColor: COLORS.accent,
-          headerTitleStyle: { fontWeight: '700' },
+          headerTitleStyle: { fontWeight: "700" },
           tabBarBadge: savedCount > 0 ? savedCount : undefined,
           tabBarBadgeStyle: {
             backgroundColor: COLORS.error,
             fontSize: 11,
-            fontWeight: '700',
+            fontWeight: "700",
           },
         }}
       />

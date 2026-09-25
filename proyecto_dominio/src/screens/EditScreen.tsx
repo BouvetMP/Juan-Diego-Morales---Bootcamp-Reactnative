@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
+  View,
   Text,
   StyleSheet,
   ScrollView,
@@ -9,43 +10,63 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { useCreateRoute } from "../hooks/useRoutes";
+import { useRouteById, useUpdateRoute } from "../hooks/useRoutes";
 import { routeSchema, RouteFormData } from "../schemas/routeSchema";
 import { FormField } from "../components/FormField";
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from "../theme";
 import type { HomeStackParamList } from "../navigation/types";
 
-type Nav = NativeStackNavigationProp<HomeStackParamList, "CreateRoute">;
+type EditNavProp = NativeStackNavigationProp<HomeStackParamList, "EditRoute">;
+type EditRouteProp = RouteProp<HomeStackParamList, "EditRoute">;
 
-export function CreateScreen(): React.JSX.Element {
-  const navigation = useNavigation<Nav>();
-  const { mutateAsync } = useCreateRoute();
+export function EditScreen(): React.JSX.Element {
+  const navigation = useNavigation<EditNavProp>();
+  const { params } = useRoute<EditRouteProp>();
+
+  const { data: routeData, isLoading } = useRouteById(params.id);
+  const { mutateAsync } = useUpdateRoute();
 
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<RouteFormData>({
     resolver: zodResolver(routeSchema),
     defaultValues: {
       name: "",
-      route: "Línea 1",
+      route: "",
       originStation: "",
       destinationStation: "",
-      duration: 20,
-      ticketPrice: 3500,
+      duration: 0,
+      ticketPrice: 0,
       subtitle: "",
     },
   });
 
+  useEffect(() => {
+    if (routeData) {
+      reset({
+        name: routeData.name,
+        route: routeData.route,
+        originStation: routeData.originStation,
+        destinationStation: routeData.destinationStation,
+        duration: routeData.duration,
+        ticketPrice: routeData.ticketPrice,
+        subtitle: routeData.subtitle,
+      });
+    }
+  }, [routeData, reset]);
+
   async function onSubmit(data: RouteFormData) {
     try {
       await mutateAsync({
+        id: params.id,
         name: data.name.trim(),
         route: data.route.trim(),
         originStation: data.originStation.trim(),
@@ -55,27 +76,33 @@ export function CreateScreen(): React.JSX.Element {
         subtitle: data.subtitle.trim(),
       });
 
-      const successMsg = "¡Ruta creada exitosamente!";
+      const msg = "¡Ruta actualizada exitosamente!";
 
       if (Platform.OS === "web") {
-        alert(successMsg);
-        navigation.navigate("HomeList");
+        alert(msg);
+        navigation.goBack();
       } else {
-        Alert.alert("¡Éxito!", "La nueva ruta ha sido agregada al catálogo.", [
-          {
-            text: "Ir a Inicio",
-            onPress: () => navigation.navigate("HomeList"),
-          },
+        Alert.alert("Éxito", msg, [
+          { text: "OK", onPress: () => navigation.goBack() },
         ]);
       }
     } catch {
-      const errorMsg = "No se pudo crear la ruta. Intenta de nuevo.";
+      const errorMsg = "No se pudo actualizar la ruta.";
       if (Platform.OS === "web") {
         alert(errorMsg);
       } else {
         Alert.alert("Error", errorMsg);
       }
     }
+  }
+
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={COLORS.accent} />
+        <Text style={styles.loadingText}>Cargando datos de la ruta...</Text>
+      </View>
+    );
   }
 
   return (
@@ -89,42 +116,37 @@ export function CreateScreen(): React.JSX.Element {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.hint}>
-          Completa la información para agregar una nueva ruta al catálogo.
+          Modifica los datos de la ruta seleccionada.
         </Text>
 
         <FormField
           control={control}
           name="name"
           label="Nombre de la ruta"
-          placeholder="Ej. Cable Portal Suba"
           error={errors.name?.message}
         />
         <FormField
           control={control}
           name="route"
           label="Línea"
-          placeholder="Ej. Línea H"
           error={errors.route?.message}
         />
         <FormField
           control={control}
           name="originStation"
           label="Estación origen"
-          placeholder="Ej. Portal Tunal"
           error={errors.originStation?.message}
         />
         <FormField
           control={control}
           name="destinationStation"
           label="Estación destino"
-          placeholder="Ej. Mirador"
           error={errors.destinationStation?.message}
         />
         <FormField
           control={control}
           name="duration"
           label="Duración (min)"
-          placeholder="25"
           keyboardType="numeric"
           error={errors.duration?.message}
         />
@@ -132,7 +154,6 @@ export function CreateScreen(): React.JSX.Element {
           control={control}
           name="ticketPrice"
           label="Tarifa (COP)"
-          placeholder="3500"
           keyboardType="numeric"
           error={errors.ticketPrice?.message}
         />
@@ -140,7 +161,6 @@ export function CreateScreen(): React.JSX.Element {
           control={control}
           name="subtitle"
           label="Descripción"
-          placeholder="Descripción breve de la ruta..."
           multiline
           error={errors.subtitle?.message}
         />
@@ -156,7 +176,7 @@ export function CreateScreen(): React.JSX.Element {
           {isSubmitting ? (
             <ActivityIndicator color={COLORS.background} />
           ) : (
-            <Text style={styles.submitText}>Crear ruta</Text>
+            <Text style={styles.submitText}>Guardar Cambios</Text>
           )}
         </Pressable>
       </ScrollView>
@@ -167,6 +187,13 @@ export function CreateScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: COLORS.background },
   container: { flex: 1 },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+  },
+  loadingText: { marginTop: SPACING.md, color: COLORS.textSecondary },
   content: { padding: SPACING.base, paddingBottom: SPACING.xxl },
   hint: {
     fontSize: TYPOGRAPHY.size.sm,

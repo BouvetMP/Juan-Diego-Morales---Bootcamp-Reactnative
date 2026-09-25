@@ -25,3 +25,6 @@ export interface JsonPlaceholderPost {
   title: string;
   body: string;
 }
+export interface UpdateRoutePayload extends CreateRoutePayload {
+  id: string;
+}
