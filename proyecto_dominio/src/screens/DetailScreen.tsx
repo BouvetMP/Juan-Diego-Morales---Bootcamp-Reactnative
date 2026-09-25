@@ -1,77 +1,117 @@
 import React, { useEffect } from "react";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
   View,
+  Text,
+  StyleSheet,
+  ScrollView,
   Image,
   Pressable,
+  ActivityIndicator,
 } from "react-native";
-import { useRoute, useNavigation } from "@react-navigation/native";
-import type { RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { useRouteById } from "../hooks/useRoutes";
-import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from "../theme";
-import type { HomeStackParamList } from "../navigation/types";
 import { useSavedStore } from "../stores/savedStore";
+import { usePreferences } from "../stores/usePreferences";
+import { TYPOGRAPHY, SPACING, RADIUS, getColors } from "../theme";
+import type { HomeStackParamList } from "../navigation/types";
+import type { CableCarRoute } from "../types";
 
-type DetailRouteProp = RouteProp<HomeStackParamList, "HomeDetail">;
 type DetailNavProp = NativeStackNavigationProp<
   HomeStackParamList,
   "HomeDetail"
 >;
+type DetailRouteProp = RouteProp<HomeStackParamList, "HomeDetail">;
 
 export function DetailScreen(): React.JSX.Element {
-  const route = useRoute<DetailRouteProp>();
   const navigation = useNavigation<DetailNavProp>();
-  const params = route.params;
+  const route = useRoute<DetailRouteProp>();
 
-  const { data: cachedRoute } = useRouteById(params.id);
+  // Maneja tanto el envío de un ID ({ id: "1" }) como el paso directo del objeto de ruta
+  const routeParam = route.params as any;
+  const routeId = typeof routeParam === "string" ? routeParam : routeParam?.id;
 
-  const cableRoute = cachedRoute ?? params;
+  const routeRaw = useRouteById(routeId);
+  const cableRoute: CableCarRoute | undefined =
+    (routeRaw as { data?: CableCarRoute })?.data ??
+    (routeRaw as CableCarRoute | undefined) ??
+    (typeof routeParam === "object" && routeParam?.name
+      ? routeParam
+      : undefined);
 
-  const isSaved = useSavedStore((s) => s.isSaved(cableRoute.id));
+  const { preferences } = usePreferences();
+  const isDark = preferences?.darkMode ?? preferences?.isDarkMode ?? true;
+  const colors = getColors(isDark);
+
+  const isSaved = useSavedStore((s) =>
+    cableRoute?.id ? s.isSaved(cableRoute.id) : false,
+  );
   const toggleRoute = useSavedStore((s) => s.toggleRoute);
 
   useEffect(() => {
-    navigation.setOptions({ title: cableRoute.name });
-  }, [navigation, cableRoute.name]);
+    if (cableRoute?.name) {
+      navigation.setOptions({ title: cableRoute.name });
+    }
+  }, [navigation, cableRoute?.name]);
+
+  if (!cableRoute) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.subtext }]}>
+          Cargando detalles de la ruta...
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
     >
       <Image
-        source={{ uri: "https://picsum.photos/600/280" }}
+        source={{ uri: cableRoute.imageUrl || "https://picsum.photos/600/280" }}
         style={styles.image}
         resizeMode="cover"
       />
 
-      <Text style={styles.name}>{cableRoute.name}</Text>
+      <Text style={[styles.name, { color: colors.text }]}>
+        {cableRoute.name}
+      </Text>
 
-      <View style={styles.badge}>
-        <Text style={styles.badgeText}>{cableRoute.route}</Text>
+      <View style={[styles.badge, { backgroundColor: colors.accentDim }]}>
+        <Text style={[styles.badgeText, { color: colors.primary }]}>
+          {cableRoute.route}
+        </Text>
       </View>
 
-      <Text style={styles.subtitle}>{cableRoute.subtitle}</Text>
+      <Text style={[styles.subtitle, { color: colors.subtext }]}>
+        {cableRoute.subtitle}
+      </Text>
 
       <Pressable
         style={({ pressed }) => [
           styles.editButton,
+          { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
           pressed && { opacity: 0.7 },
         ]}
         onPress={() => navigation.navigate("EditRoute", { id: cableRoute.id })}
       >
-        <Text style={styles.editButtonText}>✏️ Editar esta ruta</Text>
+        <Text style={[styles.editButtonText, { color: colors.text }]}>
+          ✏️ Editar esta ruta
+        </Text>
       </Pressable>
 
       <Pressable
         style={({ pressed }) => [
           styles.saveButton,
-          isSaved && styles.saveButtonActive,
+          { backgroundColor: colors.card, borderColor: colors.primary },
+          isSaved && {
+            backgroundColor: colors.accentDim,
+            borderColor: colors.danger,
+          },
           pressed && styles.saveButtonPressed,
         ]}
         onPress={() => toggleRoute(cableRoute)}
@@ -79,52 +119,107 @@ export function DetailScreen(): React.JSX.Element {
         <Text
           style={[
             styles.saveButtonText,
-            isSaved && styles.saveButtonTextActive,
+            { color: colors.primary },
+            isSaved && { color: colors.danger },
           ]}
         >
           {isSaved ? "♥ Quitar de favoritos" : "♡ Guardar en favoritos"}
         </Text>
       </Pressable>
 
-      <View style={styles.field}>
-        <Text style={styles.fieldLabel}>Origen</Text>
-        <Text style={styles.fieldValue}>{cableRoute.originStation}</Text>
-      </View>
-
-      <View style={styles.field}>
-        <Text style={styles.fieldLabel}>Destino</Text>
-        <Text style={styles.fieldValue}>{cableRoute.destinationStation}</Text>
-      </View>
-
-      <View style={styles.field}>
-        <Text style={styles.fieldLabel}>Duración del trayecto</Text>
-        <Text style={styles.fieldValue}>{cableRoute.duration} minutos</Text>
-      </View>
-
-      <View style={styles.field}>
-        <Text style={styles.fieldLabel}>Tarifa</Text>
-        <Text style={[styles.fieldValue, styles.price]}>
-          ${cableRoute.ticketPrice.toLocaleString("es-CO")} COP
+      <View
+        style={[
+          styles.field,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
+          Estación Origen
+        </Text>
+        <Text style={[styles.fieldValue, { color: colors.text }]}>
+          {cableRoute.originStation}
         </Text>
       </View>
 
-      <View style={styles.field}>
-        <Text style={styles.fieldLabel}>ID de ruta</Text>
-        <Text style={styles.fieldValue}>{cableRoute.id}</Text>
+      <View
+        style={[
+          styles.field,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
+          Estación Destino
+        </Text>
+        <Text style={[styles.fieldValue, { color: colors.text }]}>
+          {cableRoute.destinationStation}
+        </Text>
+      </View>
+
+      <View
+        style={[
+          styles.field,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
+          Duración del trayecto
+        </Text>
+        <Text style={[styles.fieldValue, { color: colors.text }]}>
+          {cableRoute.duration} minutos
+        </Text>
+      </View>
+
+      <View
+        style={[
+          styles.field,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
+          Tarifa de pasaje
+        </Text>
+        <Text style={[styles.fieldValue, { color: colors.primary }]}>
+          ${(cableRoute.ticketPrice || 0).toLocaleString("es-CO")} COP
+        </Text>
+      </View>
+
+      <View
+        style={[
+          styles.field,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.fieldLabel, { color: colors.subtext }]}>
+          Identificador de Sistema
+        </Text>
+        <Text style={[styles.fieldValue, { color: colors.text }]}>
+          {cableRoute.id}
+        </Text>
       </View>
     </ScrollView>
   );
 }
 
+export default DetailScreen;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: SPACING.md,
+  },
+  loadingText: {
+    marginTop: SPACING.sm,
+    fontSize: TYPOGRAPHY.size.base,
   },
   content: {
-    padding: SPACING.base,
+    padding: SPACING.md,
     gap: SPACING.md,
-    paddingBottom: SPACING.xxl,
+    paddingBottom: 80, // Evita solapamiento con el Bottom Tab Bar
   },
   image: {
     width: "100%",
@@ -135,11 +230,9 @@ const styles = StyleSheet.create({
   name: {
     fontSize: TYPOGRAPHY.size.xl,
     fontWeight: TYPOGRAPHY.weight.bold,
-    color: COLORS.textPrimary,
   },
   badge: {
     alignSelf: "flex-start",
-    backgroundColor: COLORS.accentDim,
     borderRadius: RADIUS.full,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
@@ -147,17 +240,13 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: TYPOGRAPHY.size.xs,
     fontWeight: TYPOGRAPHY.weight.bold,
-    color: COLORS.accent,
     textTransform: "uppercase",
   },
   subtitle: {
     fontSize: TYPOGRAPHY.size.sm,
-    color: COLORS.textSecondary,
   },
   editButton: {
-    backgroundColor: COLORS.surfaceAlt,
     borderWidth: 1,
-    borderColor: COLORS.border,
     borderRadius: RADIUS.full,
     paddingVertical: SPACING.md,
     alignItems: "center",
@@ -165,19 +254,12 @@ const styles = StyleSheet.create({
   editButtonText: {
     fontSize: TYPOGRAPHY.size.base,
     fontWeight: TYPOGRAPHY.weight.semibold,
-    color: COLORS.textPrimary,
   },
   saveButton: {
-    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.accent,
     borderRadius: RADIUS.full,
     paddingVertical: SPACING.md,
     alignItems: "center",
-  },
-  saveButtonActive: {
-    backgroundColor: COLORS.accentDim,
-    borderColor: COLORS.error,
   },
   saveButtonPressed: {
     opacity: 0.75,
@@ -185,33 +267,21 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: TYPOGRAPHY.size.base,
     fontWeight: TYPOGRAPHY.weight.bold,
-    color: COLORS.accent,
-  },
-  saveButtonTextActive: {
-    color: COLORS.error,
   },
   field: {
-    backgroundColor: COLORS.surface,
     borderRadius: RADIUS.md,
-    padding: SPACING.base,
+    padding: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   fieldLabel: {
     fontSize: TYPOGRAPHY.size.xs,
     fontWeight: TYPOGRAPHY.weight.medium,
-    color: COLORS.textSecondary,
     marginBottom: SPACING.xs,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   fieldValue: {
     fontSize: TYPOGRAPHY.size.base,
-    color: COLORS.textPrimary,
     fontWeight: TYPOGRAPHY.weight.semibold,
-  },
-  price: {
-    color: COLORS.accent,
-    fontSize: TYPOGRAPHY.size.md,
   },
 });

@@ -1,31 +1,76 @@
+// src/hooks/usePreferences.ts
 import { create } from "zustand";
-import {
-  UserPreferences,
-  DEFAULT_PREFERENCES,
-  savePreferences,
-  loadPreferences,
-} from "../storage/preferences";
+import { persist, createJSONStorage } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-interface PreferencesState {
-  preferences: UserPreferences;
-  isLoaded: boolean;
-  loadInit: () => Promise<void>;
-  updatePreference: <K extends keyof UserPreferences>(
-    key: K,
-    value: UserPreferences[K],
-  ) => Promise<void>;
+export interface Preferences {
+  isDarkMode: boolean;
+  darkMode: boolean;
+  showOnlySaved: boolean;
+  sortOrder: string;
+  showPopular: boolean;
 }
 
-export const usePreferences = create<PreferencesState>((set, get) => ({
-  preferences: DEFAULT_PREFERENCES,
-  isLoaded: false,
-  loadInit: async () => {
-    const prefs = await loadPreferences();
-    set({ preferences: prefs, isLoaded: true });
-  },
-  updatePreference: async (key, value) => {
-    const newPrefs = { ...get().preferences, [key]: value };
-    set({ preferences: newPrefs });
-    await savePreferences(newPrefs);
-  },
-}));
+export interface PreferencesState {
+  isDarkMode: boolean;
+  preferences: Preferences;
+  toggleDarkMode: () => void;
+  setDarkMode: (value: boolean) => void;
+  updatePreference: (key: string, value: any) => void;
+  loadInit: () => Promise<void>;
+}
+
+export const usePreferencesStore = create<PreferencesState>()(
+  persist(
+    (set) => ({
+      isDarkMode: true,
+      preferences: {
+        isDarkMode: true,
+        darkMode: true,
+        showOnlySaved: false,
+        sortOrder: "default",
+        showPopular: false,
+      },
+      toggleDarkMode: () =>
+        set((state) => {
+          const nextVal = !state.isDarkMode;
+          return {
+            isDarkMode: nextVal,
+            preferences: {
+              ...state.preferences,
+              isDarkMode: nextVal,
+              darkMode: nextVal,
+            },
+          };
+        }),
+      setDarkMode: (value: boolean) =>
+        set((state) => ({
+          isDarkMode: value,
+          preferences: {
+            ...state.preferences,
+            isDarkMode: value,
+            darkMode: value,
+          },
+        })),
+      updatePreference: (key: string, value: any) =>
+        set((state) => {
+          const updated = { ...state.preferences, [key]: value };
+          if (key === "isDarkMode" || key === "darkMode") {
+            updated.isDarkMode = Boolean(value);
+            updated.darkMode = Boolean(value);
+          }
+          return {
+            preferences: updated,
+            isDarkMode: updated.isDarkMode,
+          };
+        }),
+      loadInit: async () => {},
+    }),
+    {
+      name: "cable-bogota-preferences",
+      storage: createJSONStorage(() => AsyncStorage),
+    },
+  ),
+);
+
+export const usePreferences = usePreferencesStore;

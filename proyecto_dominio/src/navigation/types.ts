@@ -1,7 +1,6 @@
-export type RootTabParamList = {
-  Home: undefined;
-  Favorites: undefined;
-  Settings: undefined;
+export type AuthStackParamList = {
+  Login: undefined;
+  Register: undefined;
 };
 
 export type HomeStackParamList = {
@@ -18,5 +17,11 @@ export type HomeStackParamList = {
   };
   CreateRoute: undefined;
   EditRoute: { id: string };
+};
+
+export type RootTabParamList = {
+  Home: undefined;
+  Favorites: undefined;
+  Profile: undefined;
   Settings: undefined;
 };

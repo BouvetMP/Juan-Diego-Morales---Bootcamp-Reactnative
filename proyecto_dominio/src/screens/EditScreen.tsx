@@ -18,8 +18,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouteById, useUpdateRoute } from "../hooks/useRoutes";
 import { routeSchema, RouteFormData } from "../schemas/routeSchema";
 import { FormField } from "../components/FormField";
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from "../theme";
+import { TYPOGRAPHY, SPACING, RADIUS, getColors } from "../theme";
 import type { HomeStackParamList } from "../navigation/types";
+import { usePreferences } from "../stores/usePreferences";
+import type { CableCarRoute } from "../types";
 
 type EditNavProp = NativeStackNavigationProp<HomeStackParamList, "EditRoute">;
 type EditRouteProp = RouteProp<HomeStackParamList, "EditRoute">;
@@ -28,8 +30,17 @@ export function EditScreen(): React.JSX.Element {
   const navigation = useNavigation<EditNavProp>();
   const { params } = useRoute<EditRouteProp>();
 
-  const { data: routeData, isLoading } = useRouteById(params.id);
+  const routeRaw = useRouteById(params.id);
+  const cableRoute: CableCarRoute | undefined =
+    (routeRaw as { data?: CableCarRoute })?.data ??
+    (routeRaw as CableCarRoute | undefined);
+  const isLoading = !cableRoute;
+
   const { mutateAsync } = useUpdateRoute();
+
+  const { preferences } = usePreferences();
+  const isDark = preferences?.darkMode ?? preferences?.isDarkMode ?? true;
+  const colors = getColors(isDark);
 
   const {
     control,
@@ -50,133 +61,142 @@ export function EditScreen(): React.JSX.Element {
   });
 
   useEffect(() => {
-    if (routeData) {
+    if (cableRoute) {
       reset({
-        name: routeData.name,
-        route: routeData.route,
-        originStation: routeData.originStation,
-        destinationStation: routeData.destinationStation,
-        duration: routeData.duration,
-        ticketPrice: routeData.ticketPrice,
-        subtitle: routeData.subtitle,
+        name: cableRoute.name ?? "",
+        route: cableRoute.route ?? "",
+        originStation: cableRoute.originStation ?? "",
+        destinationStation: cableRoute.destinationStation ?? "",
+        duration: cableRoute.duration ?? 0,
+        ticketPrice: cableRoute.ticketPrice ?? 0,
+        subtitle: cableRoute.subtitle ?? "",
       });
     }
-  }, [routeData, reset]);
+  }, [cableRoute, reset]);
 
-  async function onSubmit(data: RouteFormData) {
+  const onSubmit = async (data: RouteFormData) => {
     try {
       await mutateAsync({
         id: params.id,
-        name: data.name.trim(),
-        route: data.route.trim(),
-        originStation: data.originStation.trim(),
-        destinationStation: data.destinationStation.trim(),
-        duration: data.duration,
-        ticketPrice: data.ticketPrice,
-        subtitle: data.subtitle.trim(),
+        ...data,
       });
-
-      const msg = "¡Ruta actualizada exitosamente!";
-
-      if (Platform.OS === "web") {
-        alert(msg);
-        navigation.goBack();
-      } else {
-        Alert.alert("Éxito", msg, [
-          { text: "OK", onPress: () => navigation.goBack() },
-        ]);
-      }
-    } catch {
-      const errorMsg = "No se pudo actualizar la ruta.";
-      if (Platform.OS === "web") {
-        alert(errorMsg);
-      } else {
-        Alert.alert("Error", errorMsg);
-      }
+      Alert.alert(
+        "¡Éxito!",
+        "La ruta de TransMiCable fue actualizada correctamente.",
+        [{ text: "OK", onPress: () => navigation.goBack() }],
+      );
+    } catch (error) {
+      Alert.alert(
+        "Error",
+        "No se pudo actualizar la ruta. Intente nuevamente.",
+      );
     }
-  }
+  };
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={COLORS.accent} />
-        <Text style={styles.loadingText}>Cargando datos de la ruta...</Text>
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: colors.background },
+        ]}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.subtext }]}>
+          Cargando datos de la ruta...
+        </Text>
       </View>
     );
   }
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.hint}>
-          Modifica los datos de la ruta seleccionada.
+        <Text style={[styles.title, { color: colors.text }]}>
+          Editar Ruta TransMiCable
+        </Text>
+        <Text style={[styles.subtitle, { color: colors.subtext }]}>
+          Actualice los parámetros de operación de la ruta
         </Text>
 
         <FormField
           control={control}
           name="name"
           label="Nombre de la ruta"
+          placeholder="Ej. Línea H (Tunal - Paraíso)"
           error={errors.name?.message}
         />
+
         <FormField
           control={control}
           name="route"
-          label="Línea"
+          label="Código / Identificador"
+          placeholder="Ej. L1 - Ciudad Bolívar"
           error={errors.route?.message}
         />
+
         <FormField
           control={control}
           name="originStation"
-          label="Estación origen"
+          label="Estación Origen"
+          placeholder="Ej. Portal Tunal"
           error={errors.originStation?.message}
         />
+
         <FormField
           control={control}
           name="destinationStation"
-          label="Estación destino"
+          label="Estación Destino"
+          placeholder="Ej. Mirador del Paraíso"
           error={errors.destinationStation?.message}
         />
+
         <FormField
           control={control}
           name="duration"
-          label="Duración (min)"
+          label="Duración del recorrido (minutos)"
+          placeholder="Ej. 15"
           keyboardType="numeric"
           error={errors.duration?.message}
         />
+
         <FormField
           control={control}
           name="ticketPrice"
-          label="Tarifa (COP)"
+          label="Tarifa del pasaje (COP $)"
+          placeholder="Ej. 2950"
           keyboardType="numeric"
           error={errors.ticketPrice?.message}
         />
+
         <FormField
           control={control}
           name="subtitle"
-          label="Descripción"
-          multiline
+          label="Descripción adicional"
+          placeholder="Ej. Conexión rápida Ciudad Bolívar"
           error={errors.subtitle?.message}
         />
 
         <Pressable
           style={({ pressed }) => [
-            styles.submit,
-            (pressed || isSubmitting) && { opacity: 0.7 },
+            styles.submitButton,
+            { backgroundColor: colors.primary },
+            isSubmitting && styles.disabledButton,
+            pressed && { opacity: 0.8 },
           ]}
           onPress={handleSubmit(onSubmit)}
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-            <ActivityIndicator color={COLORS.background} />
+            <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.submitText}>Guardar Cambios</Text>
+            <Text style={styles.submitButtonText}>Guardar Cambios</Text>
           )}
         </Pressable>
       </ScrollView>
@@ -184,32 +204,47 @@ export function EditScreen(): React.JSX.Element {
   );
 }
 
+export default EditScreen;
+
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: COLORS.background },
-  container: { flex: 1 },
-  centered: {
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: COLORS.background,
+    padding: SPACING.md,
   },
-  loadingText: { marginTop: SPACING.md, color: COLORS.textSecondary },
-  content: { padding: SPACING.base, paddingBottom: SPACING.xxl },
-  hint: {
+  loadingText: {
+    marginTop: SPACING.sm,
+    fontSize: TYPOGRAPHY.size.base,
+  },
+  contentContainer: {
+    padding: SPACING.md,
+    gap: SPACING.md,
+    paddingBottom: 80,
+  },
+  title: {
+    fontSize: TYPOGRAPHY.size.xl,
+    fontWeight: TYPOGRAPHY.weight.bold,
+  },
+  subtitle: {
     fontSize: TYPOGRAPHY.size.sm,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.xs,
   },
-  submit: {
-    marginTop: SPACING.md,
-    backgroundColor: COLORS.accent,
-    borderRadius: RADIUS.full,
+  submitButton: {
+    borderRadius: RADIUS.md,
     paddingVertical: SPACING.md,
     alignItems: "center",
+    marginTop: SPACING.sm,
   },
-  submitText: {
-    color: COLORS.background,
-    fontWeight: TYPOGRAPHY.weight.bold,
+  disabledButton: {
+    opacity: 0.5,
+  },
+  submitButtonText: {
+    color: "#FFFFFF",
     fontSize: TYPOGRAPHY.size.base,
+    fontWeight: TYPOGRAPHY.weight.bold,
   },
 });

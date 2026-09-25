@@ -1,103 +1,110 @@
-// ============================================
-// TEMA OSCURO (GitHub Dark) — por defecto
-// ============================================
+// src/theme/index.ts
 export const COLORS = {
+  primary: "#0969da",
   background: "#0d1117",
+  card: "#161b22",
+  cardBg: "#161b22",
   surface: "#161b22",
   surfaceAlt: "#21262d",
-
-  border: "#30363d",
-  borderLight: "#21262d",
-
-  textPrimary: "#e6edf3",
+  text: "#c9d1d9",
+  subtext: "#8b949e",
+  textMuted: "#8b949e",
+  textPrimary: "#c9d1d9",
   textSecondary: "#8b949e",
-  textMuted: "#6e7681",
-
-  accent: "#61DAFB",
-  accentDim: "#61DAFB33",
-
-  success: "#3fb950",
-  warning: "#f0883e",
+  border: "#30363d",
+  danger: "#f85149",
   error: "#f85149",
-  info: "#58a6ff",
-} as const;
-
-// ============================================
-// TEMA CLARO (GitHub Light)
-// ============================================
-export const LIGHT_COLORS = {
-  background: "#f6f8fa",
-  surface: "#ffffff",
-  surfaceAlt: "#f0f2f5",
-
-  border: "#d0d7de",
-  borderLight: "#eaeef2",
-
-  textPrimary: "#1f2328",
-  textSecondary: "#656d76",
-  textMuted: "#8c959f",
-
+  warning: "#d29922",
+  success: "#238636",
   accent: "#0969da",
-  accentDim: "#0969da33",
+  accentDim: "rgba(9, 105, 218, 0.15)",
 
-  success: "#1a7f37",
-  warning: "#9a6700",
-  error: "#cf222e",
-  info: "#0969da",
-} as const;
-
-export type AppColors = {
-  background: string;
-  surface: string;
-  surfaceAlt: string;
-  border: string;
-  borderLight: string;
-  textPrimary: string;
-  textSecondary: string;
-  textMuted: string;
-  accent: string;
-  accentDim: string;
-  success: string;
-  warning: string;
-  error: string;
-  info: string;
+  PRIMARY: "#0969da",
+  BACKGROUND: "#0d1117",
+  CARD_BG: "#161b22",
+  TEXT: "#c9d1d9",
+  SUBTEXT: "#8b949e",
+  BORDER: "#30363d",
+  DANGER: "#f85149",
+  SUCCESS: "#238636",
 };
 
-/** Devuelve la paleta según modo oscuro/claro */
-export const getColors = (darkMode: boolean): AppColors =>
-  darkMode ? COLORS : LIGHT_COLORS;
+export const LIGHT_COLORS = {
+  primary: "#0969da",
+  background: "#ffffff",
+  card: "#f6f8fa",
+  cardBg: "#f6f8fa",
+  surface: "#f6f8fa",
+  surfaceAlt: "#f0f2f5",
+  text: "#24292f",
+  subtext: "#57606a",
+  textMuted: "#57606a",
+  textPrimary: "#24292f",
+  textSecondary: "#57606a",
+  border: "#d0d7de",
+  danger: "#cf222e",
+  error: "#cf222e",
+  warning: "#9a6700",
+  success: "#1a7f37",
+  accent: "#0969da",
+  accentDim: "rgba(9, 105, 218, 0.12)",
 
-export const TYPOGRAPHY = {
-  size: {
-    xs: 11,
-    sm: 13,
-    base: 15,
-    md: 17,
-    lg: 20,
-    xl: 24,
-    xxl: 30,
-  },
-  weight: {
-    regular: "400" as const,
-    medium: "500" as const,
-    semibold: "600" as const,
-    bold: "700" as const,
-  },
-} as const;
+  PRIMARY: "#0969da",
+  BACKGROUND: "#ffffff",
+  CARD_BG: "#f6f8fa",
+  TEXT: "#24292f",
+  SUBTEXT: "#57606a",
+  BORDER: "#d0d7de",
+  DANGER: "#cf222e",
+  SUCCESS: "#1a7f37",
+};
 
 export const SPACING = {
   xs: 4,
   sm: 8,
-  md: 12,
+  md: 16,
+  lg: 24,
+  xl: 32,
   base: 16,
-  lg: 20,
-  xl: 24,
-  xxl: 32,
-} as const;
+  xxl: 40,
+};
 
 export const RADIUS = {
-  sm: 6,
+  sm: 4,
   md: 8,
   lg: 12,
   full: 9999,
-} as const;
+};
+
+export const TYPOGRAPHY = {
+  h1: { fontSize: 24, fontWeight: "bold" as const },
+  h2: { fontSize: 20, fontWeight: "bold" as const },
+  body: { fontSize: 14 },
+  caption: { fontSize: 12 },
+  size: {
+    xs: 12,
+    sm: 14,
+    base: 16, // ← agregar si falta
+    md: 16,
+    lg: 18,
+    xl: 20,
+    xxl: 24, // ← agregar si falta
+    title: 24,
+    subtitle: 16,
+    body: 14,
+    caption: 12,
+  },
+
+  weight: {
+    regular: "400" as const,
+    medium: "500" as const,
+    semibold: "600" as const,
+    bold: "bold" as const,
+  },
+};
+
+export type AppColors = typeof COLORS;
+
+export const getColors = (isDark: boolean): AppColors => {
+  return isDark ? COLORS : LIGHT_COLORS;
+};

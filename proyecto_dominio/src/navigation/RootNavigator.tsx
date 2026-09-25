@@ -1,22 +1,54 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { View, ActivityIndicator } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 
+// Pantallas
 import { HomeScreen } from "../screens/HomeScreen";
 import { DetailScreen } from "../screens/DetailScreen";
 import { CreateScreen } from "../screens/CreateScreen";
 import { FavoritesScreen } from "../screens/FavoritesScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
-import { getColors } from "../theme";
-import type { HomeStackParamList, RootTabParamList } from "./types";
-import { useSavedStore } from "../stores/savedStore";
+import { LoginScreen } from "../screens/LoginScreen";
+import { RegisterScreen } from "../screens/RegisterScreen";
+import { ProfileScreen } from "../screens/ProfileScreen";
 import { EditScreen } from "../screens/EditScreen";
-import { usePreferences } from "../hooks/usePreferences";
 
+// Stores & Config
+import { getColors } from "../theme";
+import type {
+  HomeStackParamList,
+  RootTabParamList,
+  AuthStackParamList,
+} from "./types";
+import { useSavedStore } from "../stores/savedStore";
+import { usePreferences } from "../hooks/usePreferences";
+import { useAuthStore } from "../stores/authStore";
+
+const AuthStack = createNativeStackNavigator<AuthStackParamList>();
+
+function AuthNavigator() {
+  const { preferences } = usePreferences();
+  const colors = getColors(preferences.darkMode);
+
+  return (
+    <AuthStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.background },
+      }}
+    >
+      <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="Register" component={RegisterScreen} />
+    </AuthStack.Navigator>
+  );
+}
+
+// --- STACK DE LA APP (Home) ---
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 
-function HomeStackNavigator(): React.JSX.Element {
+function HomeStackNavigator() {
   const { preferences } = usePreferences();
   const colors = getColors(preferences.darkMode);
 
@@ -38,13 +70,7 @@ function HomeStackNavigator(): React.JSX.Element {
       <HomeStack.Screen
         name="HomeDetail"
         component={DetailScreen}
-        options={({
-          route,
-        }: {
-          route: { params: HomeStackParamList["HomeDetail"] };
-        }) => ({
-          title: route.params.name,
-        })}
+        options={({ route }) => ({ title: route.params.name })}
       />
       <HomeStack.Screen
         name="CreateRoute"
@@ -62,14 +88,40 @@ function HomeStackNavigator(): React.JSX.Element {
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
-export function RootNavigator(): React.JSX.Element {
+export function RootNavigator() {
   const savedCount = useSavedStore((s) => s.savedRoutes.length);
   const { preferences } = usePreferences();
   const colors = getColors(preferences.darkMode);
 
+  const { isAuthenticated } = useAuthStore();
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    useAuthStore.persist.onFinishHydration(() => setIsReady(true));
+    if (useAuthStore.persist.hasHydrated()) setIsReady(true);
+  }, []);
+
+  if (!isReady) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: colors.background,
+        }}
+      >
+        <ActivityIndicator size="large" color={colors.accent} />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <AuthNavigator />;
+  }
+
   return (
     <Tab.Navigator
-      detachInactiveScreens={false}
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
@@ -79,16 +131,15 @@ export function RootNavigator(): React.JSX.Element {
           borderTopColor: colors.border,
         },
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
-
-          if (route.name === "Home") {
+          let iconName: keyof typeof Ionicons.glyphMap = "home";
+          if (route.name === "Home")
             iconName = focused ? "home" : "home-outline";
-          } else if (route.name === "Favorites") {
+          else if (route.name === "Favorites")
             iconName = focused ? "heart" : "heart-outline";
-          } else {
+          else if (route.name === "Profile")
+            iconName = focused ? "person" : "person-outline";
+          else if (route.name === "Settings")
             iconName = focused ? "settings" : "settings-outline";
-          }
-
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
@@ -107,13 +158,23 @@ export function RootNavigator(): React.JSX.Element {
           title: "Rutas Favoritas",
           headerStyle: { backgroundColor: colors.surface },
           headerTintColor: colors.accent,
-          headerTitleStyle: { fontWeight: "700" },
           tabBarBadge: savedCount > 0 ? savedCount : undefined,
           tabBarBadgeStyle: {
             backgroundColor: colors.error,
             fontSize: 11,
             fontWeight: "700",
           },
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: "Perfil",
+          headerShown: true,
+          title: "Mi Perfil",
+          headerStyle: { backgroundColor: colors.surface },
+          headerTintColor: colors.accent,
         }}
       />
       <Tab.Screen
@@ -125,7 +186,6 @@ export function RootNavigator(): React.JSX.Element {
           title: "Ajustes y Filtros",
           headerStyle: { backgroundColor: colors.surface },
           headerTintColor: colors.accent,
-          headerTitleStyle: { fontWeight: "700" },
         }}
       />
     </Tab.Navigator>
